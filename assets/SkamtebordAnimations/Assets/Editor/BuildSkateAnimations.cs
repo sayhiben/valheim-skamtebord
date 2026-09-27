@@ -58,7 +58,7 @@ public static class BuildSkateAnimations
         var clips = importer.defaultClipAnimations;
         foreach (var clip in clips)
         {
-            clip.name = clip.takeName.Contains("SkatePush") ? "SkatePush" : "SkateCoast";
+            clip.name = clip.takeName.Contains("SkatePush") ? "SkatePush" : clip.takeName.Contains("SkateTuck") ? "SkateTuck" : "SkateCoast";
             clip.loopTime = true;
             clip.loopPose = true;
             clip.lockRootRotation = true;
@@ -74,14 +74,14 @@ public static class BuildSkateAnimations
         var avatar = AssetDatabase.LoadAllAssetsAtPath(source).OfType<Avatar>().Single();
         if (!avatar.isValid || !avatar.isHuman) throw new Exception("Authoring skeleton is not a valid Humanoid avatar.");
         Directory.CreateDirectory("Assets/Clips");
-        foreach (var name in new[] { "SkateCoast", "SkatePush" })
+        foreach (var name in new[] { "SkateCoast", "SkatePush", "SkateTuck" })
         {
             var clip = AssetDatabase.LoadAllAssetsAtPath(source).OfType<AnimationClip>().Single(c => c.name == name);
             if (!clip.humanMotion || clip.legacy || clip.length < .9f) throw new Exception("Invalid animation: " + name);
             foreach (var binding in AnimationUtility.GetCurveBindings(clip))
             {
                 var curve = AnimationUtility.GetEditorCurve(clip, binding);
-                if (name == "SkateCoast" && curve.keys.Max(k => k.value) - curve.keys.Min(k => k.value) > .001f)
+                if (name != "SkatePush" && curve.keys.Max(k => k.value) - curve.keys.Min(k => k.value) > .001f)
                     throw new Exception("Coasting must be still: " + binding.propertyName);
             }
             var path = "Assets/Clips/" + name + ".anim";
@@ -98,13 +98,13 @@ public static class BuildSkateAnimations
         var build = new AssetBundleBuild
         {
             assetBundleName = "skamtebord-animations",
-            assetNames = new[] { "Assets/Clips/SkateCoast.anim", "Assets/Clips/SkatePush.anim" }
+            assetNames = new[] { "Assets/Clips/SkateCoast.anim", "Assets/Clips/SkatePush.anim", "Assets/Clips/SkateTuck.anim" }
         };
         var manifest = BuildPipeline.BuildAssetBundles(output, new[] { build },
             BuildAssetBundleOptions.ChunkBasedCompression | BuildAssetBundleOptions.ForceRebuildAssetBundle,
             BuildTarget.StandaloneWindows64);
         if (!manifest) throw new Exception("Animation bundle build failed.");
-        File.WriteAllText(Path.Combine(output, "build-info.txt"), "Unity " + Application.unityVersion + "\nOriginal Blender-authored Humanoid clips: SkateCoast, SkatePush.\n");
+        File.WriteAllText(Path.Combine(output, "build-info.txt"), "Unity " + Application.unityVersion + "\nOriginal Blender-authored Humanoid clips: SkateCoast, SkatePush, SkateTuck.\n");
         Debug.Log("SKATE_ASSET SUCCESS " + output);
     }
 

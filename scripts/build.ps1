@@ -50,8 +50,9 @@ No music is bundled with Skamtebord.
 }
 $manifest = [ordered]@{
     name = 'Skamtebord'
+    author = 'sayhiben'
     version_number = $version
-    website_url = ''
+    website_url = 'https://github.com/sayhiben/valheim-skamtebord'
     description = 'Craft a skateboard, ride downhill, push, jump and land tricks to develop your Skamtebord skill, with a personal MP3 radio.'
     dependencies = @('denikson-BepInExPack_Valheim-5.4.2350', 'ValheimModding-Jotunn-2.30.1')
 }
@@ -116,11 +117,16 @@ try {
         if ($dllEntries.Count -ne 1 -or $dllEntries[0].FullName.Replace('\', '/') -ne 'BepInEx/plugins/Skamtebord/Skamtebord.dll') {
             throw 'Distribution validation failed: the archive must contain only the Skamtebord plugin DLL.'
         }
+        if (@($zip.Entries | Where-Object { $_.FullName -match '\.mp3$|RuntimeSmoke' }).Count) {
+            throw 'Distribution validation failed: personal music and the QA harness must not be packaged.'
+        }
     } finally { $zip.Dispose() }
 } finally {
     $checkedStaging = Assert-SkamtebordChildPath -Path $staging -Parent $stagingParent
     Remove-Item -LiteralPath $checkedStaging -Recurse -Force
 }
 Write-Host "Package ready: $archive"
-Write-Host "SHA256: $((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash)"
+$archiveHash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+"$archiveHash  $([IO.Path]::GetFileName($archive))" | Set-Content -LiteralPath "$archive.sha256" -Encoding ascii
+Write-Host "SHA256: $archiveHash (also written to $archive.sha256)"
 Write-Host 'Build completion does not verify in-game behavior. See docs for runtime checks.'

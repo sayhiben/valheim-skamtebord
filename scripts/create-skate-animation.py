@@ -105,18 +105,22 @@ def put(name, head, tail, twist=None):
     # into the bake and even a constant coasting pose becomes an unstable animation.
     bpy.context.view_layer.update()
 
-def pose(t,push):
+def pose(t,push,tuck=False):
     # Both feet are on the deck at cycle boundaries. The support foot stays planted.
     effort=math.sin(math.pi*t)**2 if push else 0
     yaw=rot(-70+40*effort)
     hips=Vector((-.025*effort,-.08*effort,1.025-.035*effort))
     lean=Vector((0,-.07-.10*effort,0))
+    if tuck:
+        hips.z -= .26
+        hips.y -= .035
+        lean.y -= .13
     spine=hips+Vector((0,0,.14))
     chest=spine+Vector((0,0,.19))+lean*.45
     neck=chest+Vector((0,0,.17))+lean*.40
     head=neck+Vector((0,0,.13))+lean*.15
     put("Hips", hips,spine,yaw)
-    put("Spine",spine,chest, yaw @ Quaternion((1,0,0),math.radians(8+12*effort)))
+    put("Spine",spine,chest, yaw @ Quaternion((1,0,0),math.radians(8+12*effort+(18 if tuck else 0))))
     put("Chest",chest,neck,yaw @ Quaternion((1,0,0),math.radians(5)))
     put("Neck",neck,head,yaw)
     put("Head",head,head+Vector((0,0,.21)),rot(-15))
@@ -140,6 +144,7 @@ def pose(t,push):
         shoulder=clav+yaw@Vector((s*.16,0,0))
         swing=math.sin(2*math.pi*(t-.12))*.12 if push else 0
         wrist=shoulder+yaw@Vector((s*.26,-.13+s*swing,-.39))
+        if tuck: wrist=shoulder+yaw@Vector((s*.16,-.20,-.32))
         elbow=solve(shoulder,wrist,.29,.26,yaw@Vector((s*.55,.8,0)))
         put(side+"Shoulder",clav,shoulder)
         put(side+"UpperArm",shoulder,elbow)
@@ -147,14 +152,14 @@ def pose(t,push):
         put(side+"Hand",wrist,wrist+(wrist-elbow).normalized()*.13)
     bpy.context.view_layer.update()
 
-for name,push,frames in (("SkateCoast",False,30),("SkatePush",True,36)):
+for name,push,frames in (("SkateCoast",False,30),("SkatePush",True,36),("SkateTuck",False,30)):
     rig.animation_data_create()
     action=bpy.data.actions.new(name)
     action.use_fake_user=True
     rig.animation_data.action=action
     for frame in range(frames+1):
         scene.frame_set(frame)
-        pose(frame/frames,push)
+        pose(frame/frames,push,tuck=name=="SkateTuck")
         for pb in rig.pose.bones:
             pb.rotation_mode="QUATERNION"
             pb.keyframe_insert("location",frame=frame,group=pb.name)

@@ -43,13 +43,17 @@ internal static class KeyboardSmoke
         keyboard.MakeCurrent();
         held = new KeyboardState();
         InputSystem.onBeforeUpdate += QueueKeyboard;
+        bool originalToggleRun = ZInput.ToggleRun;
+        ZInput.ToggleRun = false;
         try
         {
             Application.runInBackground = true;
             log($"Keyboard focused={Application.isFocused}, enabled={keyboard.enabled}, background={keyboard.canRunInBackground}, policy={InputSystem.settings.backgroundBehavior}");
+            log("Player sprint preference ToggleRun=" + originalToggleRun + "; testing hold and toggle modes without saving settings.");
             check(keyboard.enabled && keyboard.canRunInBackground, "QA keyboard remains available without window focus");
             Time.timeScale = 1f;
             var body = player.GetComponent<Rigidbody>();
+            ControlConfigSmoke.Run(root, check);
             long initialPoints = Get<long>(Get<object>(rider, "Progression"), "LifetimePoints");
             var animator = player.GetComponentInChildren<Animator>();
             var original = animator.runtimeAnimatorController;
@@ -61,6 +65,7 @@ internal static class KeyboardSmoke
                 log(name + "=" + player.transform.InverseTransformPoint(animator.GetBoneTransform(name).position));
             // Visible, fixed camera for repeatable image evidence; player input stays enabled.
             var originalCamera = Utils.GetMainCamera();
+            var gameplayRenderingPath = originalCamera.actualRenderingPath;
             var gameCamera = originalCamera ? originalCamera.GetComponent<GameCamera>() : null;
             if (!gameCamera) gameCamera = UnityEngine.Object.FindObjectOfType<GameCamera>();
             if (gameCamera) gameCamera.enabled = false;
@@ -77,8 +82,7 @@ internal static class KeyboardSmoke
             camera.renderingPath = RenderingPath.Forward;
             var tracker = camera.gameObject.AddComponent<KeyboardCamera>();
             tracker.Target = player.transform;
-            var testShader = Shader.Find("Standard") ?? Shader.Find("Custom/Creature") ?? Shader.Find("Sprites/Default");
-            platform.GetComponent<Renderer>().sharedMaterial = new Material(testShader) { color = new Color(.19f, .27f, .25f) };
+            platform.GetComponent<Renderer>().sharedMaterial = QaBootstrap.FixtureMaterial(new Color(.19f, .27f, .25f));
             RenderSettings.ambientLight = new Color(.65f, .65f, .65f);
             if (EnvMan.instance)
             {
@@ -99,6 +103,8 @@ internal static class KeyboardSmoke
             Screen.SetResolution(1920, 1080, FullScreenMode.Windowed);
             yield return Hold(.2f);
             yield return Hold(.1f); // Bootstrap already waits for a movable, grounded player.
+            var visibility = RampVisualSmoke.Run(platform.transform.position + new Vector3(0, 1, -40), root, gameplayRenderingPath, check, log);
+            while (visibility.MoveNext()) yield return visibility.Current;
             yield return Hold(.15f, Key.B);
             yield return Hold(.45f);
             check(Get<bool>(rider, "Riding"), "B key mounts through the normal keyboard binding");
@@ -156,11 +162,51 @@ internal static class KeyboardSmoke
             yield return Hold(.1f);
             check(Speed(body) < 1f, "S key brakes the board");
 
+            Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
+            float coastHipHeight = player.transform.InverseTransformPoint(hips.position).y;
+            player.AddStamina(100f);
+            yield return Hold(2f, Key.W);
+            float ordinarySpeed = Speed(body);
+            check(ordinarySpeed > 8f && ordinarySpeed < 9.4f, $"ordinary pushing reaches its 9 m/s cap ({ordinarySpeed:F2})");
+            float sprintStamina = player.GetStamina();
+            yield return Hold(1.5f, Key.W, Key.LeftShift);
+            float sprintSpeed = Speed(body);
+            check(Get<bool>(rider, "Sprinting") && sprintSpeed > 12f && sprintSpeed < 14.4f, $"Shift+W sprints through PlayerController ({sprintSpeed:F2} m/s)");
+            check(player.GetStamina() < sprintStamina - 6f, "sprinting consumes stamina");
+            check(animator.GetCurrentAnimatorClipInfo(0).Any(c => c.clip.name == "SkateTuck" && c.weight > .2f), "Humanoid SkateTuck clip plays during sprint");
+            float tuckHipHeight = player.transform.InverseTransformPoint(hips.position).y;
+            check(tuckHipHeight < coastHipHeight - .12f, $"sprint visibly crouches the rider (hips {coastHipHeight:F2}->{tuckHipHeight:F2}m)");
+            check(Mathf.Abs(player.transform.InverseTransformPoint(front.position).y - frontMin.y) < .1f
+                && Mathf.Abs(player.transform.InverseTransformPoint(back.position).y - frontMin.y) < .1f, "both feet remain on the board during tuck");
+            check(animator.deltaPosition.magnitude < .01f, "tuck introduces no animation root travel");
+            yield return Shot(root, "06-sprint-tuck");
+            yield return Hold(.25f, Key.W);
+            check(!Get<bool>(rider, "Sprinting") && Speed(body) > sprintSpeed - 1f, $"releasing sprint preserves accumulated speed ({sprintSpeed:F2}->{Speed(body):F2}, sprint={Get<bool>(rider, "Sprinting")}, run={ZInput.GetButton("Run")})");
+            yield return Hold(.3f);
+            check(animator.GetCurrentAnimatorClipInfo(0).Any(c => c.clip.name == "SkateCoast" && c.weight > .2f), "releasing sprint restores the normal skating stance");
+            player.UseStamina(1000f);
+            yield return Hold(.15f, Key.W, Key.LeftShift);
+            check(!Get<bool>(rider, "Sprinting"), "empty stamina disables sprint");
+            yield return Hold(1.6f, Key.S);
+            player.AddStamina(100f);
+            ZInput.ToggleRun = true;
+            yield return Hold(.2f, Key.W, Key.LeftShift);
+            yield return Hold(.2f, Key.W);
+            check(Get<bool>(rider, "Sprinting"), "Valheim toggle-run preference keeps sprint active after releasing Shift");
+            yield return Hold(.2f, Key.W, Key.LeftShift);
+            yield return Hold(.2f, Key.W);
+            check(!Get<bool>(rider, "Sprinting"), "second Shift press ends toggle-mode sprint");
+            yield return Hold(.8f, Key.S);
+            ZInput.ToggleRun = false;
+            yield return Hold(.15f, Key.E);
+            check(ZInput.GetButton("Use"), "E remains available to Valheim Use while mounted");
+            yield return Hold(.1f);
+
             yield return Hold(.15f, Key.Tab);
             yield return Hold(.2f);
             check(InventoryGui.IsVisible(), "Tab opens the ordinary inventory");
-            yield return Hold(.2f, Key.B, Key.W);
-            check(Get<bool>(rider, "Riding") && !Get<bool>(rider, "Pushing"), "inventory blocks mount and push keyboard input");
+            yield return Hold(.2f, Key.B, Key.W, Key.LeftShift, Key.J);
+            check(Get<bool>(rider, "Riding") && !Get<bool>(rider, "Pushing") && !Get<bool>(rider, "Sprinting"), "inventory blocks mount, push, sprint and trick keyboard input");
             yield return Hold(.15f);
             yield return Hold(.15f, Key.Tab);
             yield return Hold(.2f);
@@ -186,6 +232,21 @@ internal static class KeyboardSmoke
             yield return Hold(.2f, Key.B);
             yield return Hold(.4f);
             check(Get<bool>(rider, "Riding"), "B remounts after normal walking");
+            Key[] trickKeys = { Key.J, Key.K, Key.L, Key.U, Key.I };
+            string[] trickNames = { "Shuvit", "Kickflip", "Heelflip", "Grab", "ThreeSixty" };
+            for (int i = 0; i < trickKeys.Length; i++)
+            {
+                player.AddStamina(100f);
+                yield return Hold(.6f, Key.W);
+                yield return Hold(.24f, Key.Space);
+                yield return Hold(.08f, trickKeys[i]);
+                string currentTrick = AccessTools.Field(rider.GetType(), "visualTrick").GetValue(rider).ToString();
+                check(currentTrick == trickNames[i], trickKeys[i] + " triggers " + trickNames[i] + " through the real trick binding");
+                yield return Hold(1f);
+                // These short flat ollies test input, not completing the longer advanced tricks.
+                if (!Get<bool>(rider, "Riding")) { yield return Hold(.15f, Key.B); yield return Hold(.2f); }
+                yield return Hold(.8f, Key.S);
+            }
             if (Environment.GetCommandLineArgs().Contains("-skamtebord-keyboard-capture"))
             {
                 string frames = Path.Combine(root, "push-video");
@@ -218,6 +279,7 @@ internal static class KeyboardSmoke
         }
         finally
         {
+            ZInput.ToggleRun = originalToggleRun;
             InputSystem.onBeforeUpdate -= QueueKeyboard;
             if (keyboard != null) InputSystem.RemoveDevice(keyboard);
             keyboard = null;

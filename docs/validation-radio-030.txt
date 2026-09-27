@@ -1,0 +1,35 @@
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS radio discovers MP3s from the configured QA folder
+PASS radio is enabled
+PASS track 1 decodes and starts playback
+PASS track 1 advances and produces non-silent audio samples (peak=0.00053)
+PASS track 2 decodes and starts playback
+PASS track 2 advances and produces non-silent audio samples (peak=0.00053)
+PASS track 3 decodes and starts playback
+PASS track 3 advances and produces non-silent audio samples (peak=0.00014)
+PASS track 4 decodes and starts playback
+PASS track 4 advances and produces non-silent audio samples (peak=0.00025)
+PASS track 5 decodes and starts playback
+PASS track 5 advances and produces non-silent audio samples (peak=0.00025)
+PASS track 6 decodes and starts playback
+PASS track 6 advances and produces non-silent audio samples (peak=0.00633)
+PASS playlist visits distinct tracks before repeating
+PASS radio toggle stops playback
+PASS radio toggle resumes playback
+PASS radio stops on dismount
+SUCCESS Actual MP3 decode and audio output verified; no music included in evidence.

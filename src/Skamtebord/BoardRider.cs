@@ -11,6 +11,7 @@ internal sealed class BoardRider : MonoBehaviour
 {
     private const string RidingKey = "skamtebord.riding";
     private const string PushingKey = "skamtebord.pushing";
+    private const string SprintingKey = "skamtebord.sprinting";
     private const string TrickKey = "skamtebord.trick";
     private const string SequenceKey = "skamtebord.trickSequence";
     private const string ExperienceKey = "com.skamtebord.valheim.xp.v1";
@@ -19,6 +20,8 @@ internal sealed class BoardRider : MonoBehaviour
     private static readonly System.Reflection.MethodInfo SetCrouch = AccessTools.Method(typeof(Player), "SetCrouch");
     private static readonly AccessTools.FieldRef<Player, bool> AutoRun = AccessTools.FieldRefAccess<Player, bool>("m_autoRun");
     private static readonly AccessTools.FieldRef<Character, Vector3> GroundNormal = AccessTools.FieldRefAccess<Character, Vector3>("m_lastGroundNormal");
+    private static readonly AccessTools.FieldRef<Character, float> GroundContactAge = AccessTools.FieldRefAccess<Character, float>("m_lastGroundTouch");
+    private const float JumpGraceSeconds = .12f;
     private Player player;
     private Rigidbody body;
     private CapsuleCollider capsule;
@@ -27,12 +30,15 @@ internal sealed class BoardRider : MonoBehaviour
     private SkateAnimator skateAnimator;
     private float lastPushTime = -1f;
     private bool publishedPushing;
+    private bool sprintRequested, publishedSprinting;
     private GameObject board;
     private Transform visual;
     private Quaternion originalVisualRotation;
     private bool posing, loaded, wasGrounded;
     private Vector3 controls;
     private bool jumpQueued;
+    private bool ollieAvailable;
+    private float lastSupportedTime = float.NegativeInfinity;
     private float heading, takeoffTime, takeoffSpeed, ignoreGroundUntil, lastVerticalSpeed;
     private float lastAthleticsReward = -30f, lastMaintenance, trickStart, trickDuration;
     private int trickSequence;
@@ -43,6 +49,7 @@ internal sealed class BoardRider : MonoBehaviour
     private CollisionDetectionMode previousCollisionMode;
     internal bool Riding { get; private set; }
     internal bool Grounded { get; private set; }
+    internal bool Sprinting { get; private set; }
     internal bool Pushing => Riding && Grounded && controls.z > .1f && Time.time - lastPushTime < .15f;
     internal ComboSession Combo { get; } = new ComboSession();
     internal SkamtebordProgression Progression { get; private set; } = new SkamtebordProgression();
@@ -79,7 +86,7 @@ internal sealed class BoardRider : MonoBehaviour
         }
         if (Time.time - lastMaintenance > 1f) { lastMaintenance = Time.time; MirrorSkill(); }
         if (Riding && (!CanRide() || !HasBoard())) Dismount(true);
-        if (!InputAllowed()) { controls = Vector3.zero; jumpQueued = false; return; }
+        if (!InputAllowed()) { controls = Vector3.zero; jumpQueued = false; sprintRequested = false; return; }
         if (Down(Settings.Mount)) Toggle();
         if (Down(Settings.RadioToggle)) SkamtebordPlugin.Instance.Radio?.Toggle();
         if (Down(Settings.RadioNext)) SkamtebordPlugin.Instance.Radio?.NextTrack();
@@ -117,8 +124,12 @@ internal sealed class BoardRider : MonoBehaviour
         if (!CanRide() || !player.IsOnGround()) { Say("Find solid ground and free your hands before skating."); return; }
         Riding = true;
         Grounded = wasGrounded = true;
+        ollieAvailable = true;
+        lastSupportedTime = Time.time;
+        ignoreGroundUntil = 0f;
         heading = player.transform.eulerAngles.y;
         controls = Vector3.zero;
+        sprintRequested = Sprinting = false;
         lastPushTime = -1f;
         Combo.Bail();
         AutoRun(player) = false;
@@ -141,20 +152,31 @@ internal sealed class BoardRider : MonoBehaviour
         jumpQueued |= InputAllowed() && jump;
     }
 
+    internal void CaptureSprint(bool sprint) => sprintRequested = InputAllowed() && sprint;
+
     // Called from Character.UpdateWalking, inside the owner's normal physics update.
     // Character's surrounding motion/ground code still handles falling, damage and network sync.
     internal bool Step(float dt)
     {
         if (!Riding || !IsLocal) return false;
         if (!CanRide()) { Dismount(true); return false; }
-        if (!InputAllowed()) { controls = Vector3.zero; jumpQueued = false; }
+        if (!InputAllowed()) { controls = Vector3.zero; jumpQueued = false; sprintRequested = false; }
         body.useGravity = true;
-        Grounded = Time.time >= ignoreGroundUntil && player.IsOnGround();
+        // IsOnGround includes Valheim's 0.2-second walking grace. While skating,
+        // stale contact must not apply grip, braking or pushing after a ramp lip.
+        // UpdateGroundContact resets this age immediately before UpdateWalking.
+        Grounded = Time.time >= ignoreGroundUntil && (GroundContactAge(player) <= .001f || body.IsSleeping());
+        if (Grounded)
+        {
+            lastSupportedTime = Time.time;
+            ollieAvailable = true;
+        }
         // 1.0.15's GetLastGroundNormal returns the transient contact accumulator, already reset
         // by UpdateGroundContact before this callback. Use the persisted contact normal instead.
         var normal = Grounded ? GroundNormal(player) : Vector3.up;
         if (normal.sqrMagnitude < .1f) normal = Vector3.up;
         normal.Normalize();
+        Sprinting = Grounded && sprintRequested && controls.z > .1f && player.HaveStamina(6f * dt);
 
         Combo.Tick(dt);
         if (!Grounded && wasGrounded) BeginAir();
@@ -189,25 +211,30 @@ internal sealed class BoardRider : MonoBehaviour
             float brake = controls.z < -.1f ? Settings.BrakeStrength.Value * -controls.z : .32f;
             if (tangent.sqrMagnitude > .001f)
                 body.AddForce(-tangent.normalized * Mathf.Min(tangent.magnitude, brake * dt), ForceMode.VelocityChange);
-            if (controls.z > .1f && Vector3.Dot(velocity, forward) < Settings.PushTopSpeed.Value && player.HaveStamina(2f * dt))
+            float staminaRate = Sprinting ? 6f : 2f;
+            float topSpeed = Sprinting ? Settings.SprintTopSpeed.Value : Settings.PushTopSpeed.Value;
+            if (controls.z > .1f && Vector3.Dot(velocity, forward) < topSpeed && player.HaveStamina(staminaRate * dt))
             {
-                body.AddForce(forward * (Settings.PushAcceleration.Value * controls.z), ForceMode.Acceleration);
-                player.UseStamina(2f * dt);
+                body.AddForce(forward * ((Sprinting ? Settings.SprintAcceleration.Value : Settings.PushAcceleration.Value) * controls.z), ForceMode.Acceleration);
+                if (!Sprinting) player.UseStamina(staminaRate * dt);
                 lastPushTime = Time.time;
             }
-            if (jumpQueued && player.HaveStamina(5f))
-            {
-                player.UseStamina(5f);
-                Vector3 launch = body.linearVelocity;
-                launch.y = Mathf.Max(launch.y, Settings.JumpSpeed.Value);
-                // effects:false avoids vanilla OnJump stamina/athletics progression.
-                player.ForceJump(launch, effects: false);
-                animationSync?.SetTrigger("jump");
-                ignoreGroundUntil = Time.time + .18f;
-                Grounded = wasGrounded = false;
-                BeginAir();
-                Trick(TrickId.Ollie);
-            }
+            if (Sprinting) player.UseStamina(6f * dt);
+        }
+        if (jumpQueued && ollieAvailable && Time.time - lastSupportedTime <= JumpGraceSeconds && player.HaveStamina(5f))
+        {
+            player.UseStamina(5f);
+            // The collider already redirects velocity up the ramp. Keep that full
+            // momentum and add the ollie impulse; never replace its vertical part.
+            Vector3 launch = body.linearVelocity + Vector3.up * Settings.JumpSpeed.Value;
+            player.ForceJump(launch, effects: false); // No vanilla jump XP/stamina charge.
+            animationSync?.SetTrigger("jump");
+            ollieAvailable = false;
+            ignoreGroundUntil = Time.time + .18f;
+            if (Grounded) BeginAir(); // A grace-window ollie continues the same flight.
+            Grounded = wasGrounded = false;
+            Sprinting = false;
+            Trick(TrickId.Ollie);
         }
         jumpQueued = false;
         // A soft speed ceiling retains vertical velocity and collision response.
@@ -222,6 +249,11 @@ internal sealed class BoardRider : MonoBehaviour
         {
             publishedPushing = Pushing;
             view.GetZDO().Set(PushingKey, publishedPushing);
+        }
+        if (publishedSprinting != Sprinting)
+        {
+            publishedSprinting = Sprinting;
+            view.GetZDO().Set(SprintingKey, publishedSprinting);
         }
         return true;
     }
@@ -292,12 +324,16 @@ internal sealed class BoardRider : MonoBehaviour
         controls = Vector3.zero;
         jumpQueued = false;
         lastPushTime = -1f;
+        ollieAvailable = false;
+        lastSupportedTime = float.NegativeInfinity;
         publishedPushing = false;
+        sprintRequested = Sprinting = publishedSprinting = false;
         Combo.Bail(); // Exiting never banks an unfinished combo.
         if (view && view.IsValid() && view.IsOwner())
         {
             view.GetZDO().Set(RidingKey, false);
             view.GetZDO().Set(PushingKey, false);
+            view.GetZDO().Set(SprintingKey, false);
         }
         skateAnimator?.Dispose();
         if (capsule)
@@ -335,7 +371,7 @@ internal sealed class BoardRider : MonoBehaviour
         bool active = IsLocal ? Riding : view.GetZDO().GetBool(RidingKey);
         if (!active || player.IsDead()) { if (board) board.SetActive(false); skateAnimator?.Dispose(); RestorePose(); remoteRiding = false; return; }
         skateAnimator?.Mount();
-        skateAnimator?.SetPushing(IsLocal ? Pushing : view.GetZDO().GetBool(PushingKey));
+        skateAnimator?.SetMotion(IsLocal ? Pushing : view.GetZDO().GetBool(PushingKey), IsLocal ? Sprinting : view.GetZDO().GetBool(SprintingKey));
         if (!board) board = BoardModel.Create(transform);
         board.SetActive(true);
         if (!IsLocal)
