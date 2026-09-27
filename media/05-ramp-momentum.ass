@@ -1,0 +1,15 @@
+﻿[Script Info]
+ScriptType: v4.00+
+PlayResX: 1280
+PlayResY: 400
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Label,Segoe UI,22,&H00FFFFFF,&H000000FF,&H001A2222,&H00000000,-1,0,0,0,100,100,0,0,1,1,0,7,20,20,12,1
+Style: Note,Segoe UI,17,&H00CFDDDD,&H000000FF,&H001A2222,&H00000000,0,0,0,0,100,100,0,0,1,1,0,2,20,20,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:01:00.00,Label,,0,0,0,,{\pos(20,12)}Roll off | Peak 1.43 m
+Dialogue: 0,0:00:00.00,0:01:00.00,Label,,0,0,0,,{\pos(660,12)}Jump at the lip | Peak 2.69 m
+Dialogue: 0,0:00:00.00,0:01:00.00,Note,,0,0,0,,Same 12 m/s approach | Half-speed replay | Height above the flat floor | Actual Valheim physics

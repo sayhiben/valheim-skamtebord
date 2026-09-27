@@ -1,0 +1,12 @@
+case,approach_mps,lip_horizontal,lip_up,air_horizontal,air_up,apex_above_floor,airtime,landed,riding,jump_up_before,jump_up_after
+roll-slow,10,5.228,1.104,5.228,0.704,1.314,0.460,True,True,0.000,0.000
+roll-fast,16,12.226,3.651,12.226,3.251,1.700,0.640,True,True,0.000,0.000
+jump-early,12,0.000,0.000,11.859,4.800,0.707,0.400,True,True,0.000,4.800
+jump-lip,12,8.386,3.052,8.380,7.850,2.693,0.960,True,True,3.052,7.850
+jump-grace,12,7.970,2.102,7.970,1.702,2.187,0.880,True,True,0.502,5.302
+jump-too-late,12,7.970,2.102,7.970,1.702,1.433,0.520,True,True,-3.098,-3.498
+jump-repeat,12,8.386,3.052,8.380,7.850,2.693,0.960,True,True,3.052,7.850
+terrain-crest,16,12.226,3.651,12.226,3.251,1.700,0.640,True,True,0.000,0.000
+roll-normal,12,7.970,2.102,7.970,1.702,1.433,0.520,True,True,0.000,0.000
+steep-ramp,12,5.390,2.975,5.390,2.575,1.515,0.580,True,True,0.000,0.000
+air-push,12,7.970,2.102,7.970,1.702,1.433,0.520,True,True,0.000,0.000

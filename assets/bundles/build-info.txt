@@ -1,2 +1,2 @@
 Unity 6000.0.75f1
-Original Blender-authored Humanoid clips: SkateCoast, SkatePush.
+Original Blender-authored Humanoid clips: SkateCoast, SkatePush, SkateTuck.

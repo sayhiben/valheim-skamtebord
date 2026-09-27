@@ -58,6 +58,20 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
             Patch(typeof(Game), "Start", nameof(PrepareFreshProfile));
             Patch(typeof(Game), "SetActivityCampaignProgress", nameof(Skip));
             QaBootstrap.Install(harmony, message => Log("BOOTSTRAP", message));
+            var args = Environment.GetCommandLineArgs();
+            int radioArgument = Array.IndexOf(args, "-skamtebord-radio-directory");
+            if (radioArgument >= 0 && radioArgument + 1 < args.Length)
+            {
+                var radioType = AccessTools.TypeByName("Skamtebord.Radio.SkateRadio");
+                var radio = UnityEngine.Object.FindFirstObjectByType(radioType);
+                // The normal plugin deliberately omits audio components in headless runs.
+                if (radio)
+                {
+                    var directory = (BepInEx.Configuration.ConfigEntry<string>)AccessTools.Field(radioType, "_directory").GetValue(radio);
+                    directory.Value = Path.GetFullPath(args[radioArgument + 1]);
+                    Log("RADIO", "QA music folder=" + directory.Value);
+                }
+            }
             // Avoid platform achievement/stat side effects from an automated fresh spawn.
             foreach (MethodInfo method in typeof(Achievements).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static))
                 if (method.Name == "AchievementEvent" || method.Name == "AchievementStatIncrementEvent" || method.Name == "AchievementStatSetEvent")
@@ -206,17 +220,32 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
         Log("MOUNT_STATE", MountState(player, rider, platform));
         Check(OnPlatform(player, platform), "character settles on real static collider");
         Check(player.CanMove(), "QA character is movable before controls begin");
+        bool rampTest = Environment.GetCommandLineArgs().Contains("-skamtebord-ramps");
+        bool radioTest = Environment.GetCommandLineArgs().Contains("-skamtebord-radio-test");
+        if (rampTest && interactive) RampSmoke.CreatePlayCourse(origin);
         if (interactive)
         {
             Invoke(rider, "Toggle");
+            player.SetMouseLookForward();
+            AccessTools.Field(typeof(Player), "m_lookPitch").SetValue(player, 12f);
             Check(Get<bool>(rider, "Riding"), "interactive QA starts mounted with normal controls");
+            yield return new WaitForEndOfFrame();
+            foreach (var camera in Camera.allCameras)
+                Log("CAMERA", $"{camera.name}: position={camera.transform.position}, forward={camera.transform.forward}, mask={camera.cullingMask:X}, clips={camera.nearClipPlane}/{camera.farClipPlane}, defaultCull={camera.layerCullDistances[0]}");
+            foreach (var renderer in UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None).Where(r => r.name.Contains("fixture")))
+                Log("RAMP_RENDER", $"{renderer.name}: layer={renderer.gameObject.layer}, bounds={renderer.bounds}, visible={renderer.isVisible}, viewport={Utils.GetMainCamera().WorldToViewportPoint(renderer.bounds.center)}");
+            if (Environment.GetCommandLineArgs().Contains("-skamtebord-render-diagnostics"))
+            {
+                var diagnostic = RampRenderDiagnostics.Run(saveRoot, message => Log("RENDER_DIAGNOSTIC", message));
+                while (diagnostic.MoveNext()) yield return diagnostic.Current;
+            }
         }
         Mark("skate_ready");
         ready = true;
         File.WriteAllText(Path.Combine(saveRoot, "qa-ready.json"), JsonUtility.ToJson(new ReadyRecord
         {
             processId = System.Diagnostics.Process.GetCurrentProcess().Id, readySeconds = Time.realtimeSinceStartup,
-            mode = interactive ? "play" : keyboardTest ? "keyboard" : "physics", saveRoot = saveRoot,
+            mode = interactive ? "play" : keyboardTest ? "keyboard" : rampTest ? "ramps" : radioTest ? "radio" : "physics", saveRoot = saveRoot,
             initialPoints = initialPoints, level = Get<int>(Get<object>(rider, "Progression"), "Level"), fastWorld = QaBootstrap.FastWorld
         }, true));
         File.WriteAllText(Path.Combine(Paths.GameRootPath, "latest-qa-session.txt"), saveRoot);
@@ -225,6 +254,28 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
             player.Message(MessageHud.MessageType.Center, "QA ready: slot 1 / B board • " + (QaBootstrap.FreshProgression ? "fresh progression" : "all tricks unlocked") + " • no saves");
             File.WriteAllLines(Path.Combine(saveRoot, "smoke-result.txt"), checks.Concat(new[] { "READY Interactive QA; close the game when finished." }));
             Log("READY", $"Interactive QA ready in {Time.realtimeSinceStartup:F2}s. Saves remain disabled.");
+            yield break;
+        }
+        if (rampTest)
+        {
+            var ramps = RampSmoke.Run(player, rider, platform, saveRoot, Check, message => Log("RAMPS", message));
+            while (ramps.MoveNext()) yield return ramps.Current;
+            Check(SaveSystem.HasSessionFlag(SaveSystemSessionFlags.DontSaveAnything), "ramp test retains save isolation");
+            Finish(true, "Real Unity ramp momentum and timed-jump checks completed; telemetry in " + saveRoot);
+            yield break;
+        }
+        if (radioTest)
+        {
+            Invoke(rider, "Toggle");
+            var runRadio = RadioSmoke.Run(saveRoot, Check, message => Log("RADIO", message));
+            while (runRadio.MoveNext()) yield return runRadio.Current;
+            Invoke(rider, "Dismount", false);
+            var radioType = AccessTools.TypeByName("Skamtebord.Radio.SkateRadio");
+            var source = (AudioSource)AccessTools.Field(radioType, "_source").GetValue(UnityEngine.Object.FindFirstObjectByType(radioType));
+            Check(!source.isPlaying, "radio stops on dismount");
+            var musicSource = (AudioSource)AccessTools.Field(typeof(MusicMan), "m_musicSource").GetValue(MusicMan.instance);
+            Check(!musicSource.mute, "dismount immediately restores game music");
+            Finish(true, "Actual MP3 decode and audio output verified; no music included in evidence.");
             yield break;
         }
         if (keyboardTest)

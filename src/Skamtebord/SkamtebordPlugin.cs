@@ -15,7 +15,7 @@ namespace Skamtebord;
 public sealed class SkamtebordPlugin : BaseUnityPlugin
 {
     public const string Guid = "com.skamtebord.valheim";
-    public const string ModVersion = "0.2.0";
+    public const string ModVersion = "0.3.1";
     internal static SkamtebordPlugin Instance;
     internal SkateSettings Settings;
     internal SkateRadio Radio;
@@ -59,6 +59,11 @@ public sealed class SkamtebordPlugin : BaseUnityPlugin
     private void OnDestroy()
     {
         PrefabManager.OnVanillaPrefabsAvailable -= BoardItem.Register;
+        if (Radio)
+        {
+            Radio.enabled = false;
+            Destroy(Radio);
+        }
         foreach (var player in Player.GetAllPlayers())
             if (player && player.TryGetComponent<BoardRider>(out var rider)) Destroy(rider);
         harmony?.UnpatchSelf();

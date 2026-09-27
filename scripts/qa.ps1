@@ -1,20 +1,27 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('Play', 'Keyboard', 'Physics')][string] $Mode = 'Play',
+    [ValidateSet('Play', 'Keyboard', 'Physics', 'Ramps', 'Radio')][string] $Mode = 'Play',
     [string] $ValheimPath,
+    [string] $RadioDirectory,
     [switch] $NoBuild,
     [switch] $FreshProgression,
     [switch] $FullWorld,
-    [switch] $Record
+    [switch] $Record,
+    [switch] $RenderDiagnostics,
+    [switch] $Ramps
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 $root = Get-SkamtebordRoot
+if (!$RadioDirectory) { $RadioDirectory = Join-Path $root 'radio-mp3s' }
+$RadioDirectory = [IO.Path]::GetFullPath($RadioDirectory)
 $game = Resolve-ValheimPath -ValheimPath $ValheimPath
 if (@(Get-Process -Name valheim, valheim_server -ErrorAction SilentlyContinue).Count) {
     throw 'A Valheim process is already running. Close it before starting another QA session.'
 }
-if ($Record -and $Mode -ne 'Keyboard') { throw '-Record requires -Mode Keyboard.' }
+if ($Record -and $Mode -notin @('Keyboard', 'Ramps')) { throw '-Record requires -Mode Keyboard or Ramps.' }
+if ($Ramps -and $Mode -ne 'Play') { throw '-Ramps adds the interactive course to Play mode; use -Mode Ramps for automated tests.' }
+if ($RenderDiagnostics -and $Mode -ne 'Play') { throw '-RenderDiagnostics captures the ordinary camera in Play mode.' }
 $runtime = Assert-SkamtebordChildPath -Path (Join-Path $root '.local/runtime') -Parent $root
 if ((Test-Path -LiteralPath $runtime) -and (Get-Item -LiteralPath $runtime).LinkType) { throw 'The QA runtime root must be a real directory.' }
 New-Item -ItemType Directory -Path $runtime -Force | Out-Null
@@ -58,13 +65,17 @@ Copy-SkamtebordFile -Source (Join-Path $root 'src/Skamtebord/bin/Release/netstan
 Copy-SkamtebordFile -Source (Join-Path $root 'tests/Skamtebord.RuntimeSmoke/bin/Release/netstandard2.1/Skamtebord.RuntimeSmoke.dll') -Destination (Join-Path $runtime 'BepInEx/plugins/RuntimeSmoke/Skamtebord.RuntimeSmoke.dll')
 $log = Join-Path $root ('.local/qa-' + $Mode.ToLowerInvariant() + '-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.log')
 $arguments = @('-skamtebord-smoke', '-console', '-logFile', ('"' + $log + '"'))
-if ($Mode -eq 'Physics') { $arguments += @('-batchmode', '-nographics') }
+$arguments += @('-skamtebord-radio-directory', ('"' + $RadioDirectory + '"'))
+if ($Mode -eq 'Physics' -or ($Mode -eq 'Ramps' -and !$Record)) { $arguments += @('-batchmode', '-nographics') }
 else { $arguments += @('-force-d3d11', '-screen-fullscreen', '0', '-screen-width', '1920', '-screen-height', '1080') }
 if ($Mode -eq 'Play') { $arguments += '-skamtebord-qa' }
 if ($Mode -eq 'Keyboard') { $arguments += '-skamtebord-keyboard-test' }
+if ($Mode -eq 'Radio') { $arguments += '-skamtebord-radio-test' }
+if ($Mode -eq 'Ramps' -or $Ramps) { $arguments += '-skamtebord-ramps' }
 if ($FreshProgression) { $arguments += '-skamtebord-fresh-progression' }
 if ($FullWorld) { $arguments += '-skamtebord-full-world' }
-if ($Record) { $arguments += '-skamtebord-keyboard-capture' }
+if ($Record) { $arguments += $(if ($Mode -eq 'Ramps') { '-skamtebord-ramp-capture' } else { '-skamtebord-keyboard-capture' }) }
+if ($RenderDiagnostics) { $arguments += '-skamtebord-render-diagnostics' }
 $launch = @{ FilePath = (Join-Path $runtime 'valheim.exe'); ArgumentList = $arguments; WorkingDirectory = $runtime; PassThru = $true }
 if ($Mode -ne 'Play') { $launch.WindowStyle = 'Hidden' }
 $watch = [Diagnostics.Stopwatch]::StartNew()

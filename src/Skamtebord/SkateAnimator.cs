@@ -9,18 +9,20 @@ namespace Skamtebord;
 // Each rider owns an override controller; no shared player controller is modified.
 internal sealed class SkateAnimator : IDisposable
 {
-    private static AnimationClip coast, push;
+    private static AnimationClip coast, push, tuck;
     private static bool triedLoading;
     private readonly Animator animator;
     private RuntimeAnimatorController original;
     private AnimatorOverrideController controller;
+    private List<KeyValuePair<AnimationClip, AnimationClip>> normalClips, tuckClips;
+    private bool tucking;
     internal bool Active => controller && animator && animator.runtimeAnimatorController == controller;
 
     internal SkateAnimator(Animator animator) { this.animator = animator; }
 
     private static bool Load()
     {
-        if (triedLoading) return coast && push;
+        if (triedLoading) return coast && push && tuck;
         triedLoading = true;
         try
         {
@@ -30,12 +32,13 @@ internal sealed class SkateAnimator : IDisposable
             if (!bundle) throw new InvalidOperationException("Unity could not load the animation bundle.");
             coast = bundle.LoadAsset<AnimationClip>("assets/clips/skatecoast.anim");
             push = bundle.LoadAsset<AnimationClip>("assets/clips/skatepush.anim");
+            tuck = bundle.LoadAsset<AnimationClip>("assets/clips/skatetuck.anim");
             bundle.Unload(false);
-            if (!coast || !push || !coast.humanMotion || !push.humanMotion) throw new InvalidOperationException("Humanoid skating clips are missing or invalid.");
-            SkamtebordPlugin.Instance.Log($"Loaded Humanoid skate animations: coast={coast.length:F2}s, push={push.length:F2}s.");
+            if (!coast || !push || !tuck || !coast.humanMotion || !push.humanMotion || !tuck.humanMotion) throw new InvalidOperationException("Humanoid skating clips are missing or invalid.");
+            SkamtebordPlugin.Instance.Log($"Loaded Humanoid skate animations: coast={coast.length:F2}s, push={push.length:F2}s, tuck={tuck.length:F2}s.");
         }
         catch (Exception error) { SkamtebordPlugin.Instance.Log("Skating animation unavailable; using basic pose. " + error.Message); }
-        return coast && push;
+        return coast && push && tuck;
     }
 
     internal void Mount()
@@ -70,15 +73,25 @@ internal sealed class SkateAnimator : IDisposable
             return;
         }
         controller.ApplyOverrides(clips);
+        normalClips = clips;
+        tuckClips = clips.Select(pair => new KeyValuePair<AnimationClip, AnimationClip>(pair.Key,
+            pair.Value == coast || pair.Value == push ? tuck : pair.Value)).ToList();
+        tucking = false;
         SwapController(controller);
-        // Root travel is baked out of both clips at import. Changing applyRootMotion
+        // Root travel is baked out of all clips at import. Changing applyRootMotion
         // would reinitialize Valheim's state machine and replay its spawn animation.
         SkamtebordPlugin.Instance.Log($"Skate animator ready: {idleCount} idle and {moveCount} locomotion clips; base={original.name}.");
     }
 
-    internal void SetPushing(bool pushing)
+    internal void SetMotion(bool pushing, bool sprinting)
     {
-        if (Active) animator.SetFloat("forward_speed", pushing ? 2.5f : 0f, .14f, Time.deltaTime);
+        if (!Active) return;
+        if (tucking != sprinting)
+        {
+            controller.ApplyOverrides(sprinting ? tuckClips : normalClips);
+            tucking = sprinting;
+        }
+        animator.SetFloat("forward_speed", pushing ? 2.5f : 0f, .14f, Time.deltaTime);
     }
 
     private void SwapController(RuntimeAnimatorController next)
@@ -113,5 +126,7 @@ internal sealed class SkateAnimator : IDisposable
         if (controller) UnityEngine.Object.Destroy(controller);
         controller = null;
         original = null;
+        normalClips = tuckClips = null;
+        tucking = false;
     }
 }

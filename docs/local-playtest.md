@@ -2,6 +2,12 @@
 
 Prepared on 2026-09-26 using the installed Steam release, **Valheim 1.0.16** (Steam build 25527674).
 
+## Current development build — 2026-09-27
+
+The installed DLL in **Skamtebord Dev** is now **0.3.1**, including pushing/tuck animations, the relocated HUD, additive ramp ollies, revised trick controls, and automatic game-music muting during MP3 playback. SHA-256: `A05BDCB9A13E2ABAA7BD0E9CD73736F656B7A252B7CB4626FA2B49AAF43D66C8`. Previous DLLs are backed up under `.local/profile-backups/`. Configuration and radio files are preserved. The isolated validation results are in [testing.md](testing.md).
+
+For an immediate ramp session, run `scripts/qa.ps1 -Ramps`: the player starts mounted, with all tricks unlocked, in the disposable three-lane course. The ordinary r2modman profile still uses normal progression and saves. The observations below describe the earlier 0.1.0 hands-on session.
+
 ## Launch again
 
 1. Open r2modman and select Valheim.
@@ -54,6 +60,10 @@ spawn LeatherScraps 2
 Collect the materials, open the inventory with Tab, select **Skamtebord**, and craft it. It requires no station. Keep the board in your inventory, close the inventory, and press **B** to mount. **W** pushes, **A/D** steer, **S** brakes, and **Space** ollies. Press **B** again to dismount. Advanced tricks unlock through Skamtebord XP.
 
 ## Updating the development DLL
+
+2026-09-27 update: **0.3.1** is installed after **54 live radio checks** and **21 core checks** passed. Its DLL hash matches the current build above. The previous DLL, metadata, configuration, radio-folder instructions, and mod-manager record are in `.local/profile-backups/pre-0.3.1-20260927-132622/`. MP3 playback now temporarily mutes only Valheim's music source and restores its prior mute state when playback ends. Sound effects and saved music-volume preferences are unchanged. The profile configuration was preserved byte-for-byte, and its music files were not moved or copied.
+
+2026-09-27 update: **0.3.0** is installed in **Skamtebord Dev** after 83 keyboard/rendering, 52 ramp, 30 physics, 34 radio, and 21 core checks passed. The installed DLL matches SHA-256 `3E7930BB345A22719DD2C6D631AE0114E74B7611C7455564A7C6EB71684FB7A7`. Previous DLL, metadata, configuration and mod-manager record are in `.local/profile-backups/pre-0.3.0-20260927-125704/`. The normal profile contains no QA harness. Its `Radio/Directory` now points to `D:\dev\valheim-skamtebord\radio-mp3s`, where the six supplied tracks were verified to decode and produce Unity audio output. The MP3 files themselves were not moved or copied. Legacy default trick bindings migrate to J/K/L/U/I when the new plugin loads. Sprint follows the game's existing hold/toggle preference; this installation currently uses toggle run.
 
 2026-09-26 update: **0.2.0** was installed into this same **Skamtebord Dev** profile after its isolated keyboard and physics tests passed. The previous DLL and package metadata are backed up in `.local/profile-backups/pre-0.2.0/`. Configuration and personal radio files were preserved. The normal profile contains no developer test harness. Launch **Start modded** again to use the new pushing/coasting clips and repositioned HUD. See [current validation](testing.md) and [six-second gameplay capture](../media/04-pushing-animation.mp4).
 

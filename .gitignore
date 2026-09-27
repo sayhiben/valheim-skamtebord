@@ -5,7 +5,7 @@
 dist/
 Environment.props
 *.user
-radio-mp3s/*.mp3
+*.[mM][pP]3
 assets/SkamtebordAnimations/Library/
 assets/SkamtebordAnimations/Temp/
 assets/SkamtebordAnimations/Logs/

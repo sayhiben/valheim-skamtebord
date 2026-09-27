@@ -91,10 +91,21 @@ internal static class QaBootstrap
         Platform.layer = LayerMask.NameToLayer("Default");
         Platform.transform.position = top - Vector3.up;
         Platform.transform.localScale = new Vector3(200, 2, 200);
-        var shader = Shader.Find("Standard") ?? Shader.Find("Sprites/Default");
-        if (shader) Platform.GetComponent<Renderer>().sharedMaterial = new Material(shader) { color = new Color(.19f, .27f, .25f) };
+        Platform.GetComponent<Renderer>().sharedMaterial = FixtureMaterial(new Color(.19f, .27f, .25f));
         Physics.SyncTransforms();
         return Platform;
+    }
+
+    internal static Material FixtureMaterial(Color color)
+    {
+        // Shader.Find can miss Valheim's asset-bundle shaders. A sprite fallback
+        // has no depth writes, making the large floor overpaint distant ramps.
+        var source = ObjectDB.instance.GetItemPrefab("Wood").GetComponentsInChildren<Renderer>(true)
+            .SelectMany(r => r.sharedMaterials).FirstOrDefault(m => m && m.renderQueue < 2500);
+        if (!source) throw new InvalidOperationException("No opaque Wood material available for the QA fixture.");
+        var previousShader = Shader.Find("Custom/Creature") ?? Shader.Find("Standard") ?? Shader.Find("Sprites/Default");
+        Debug.Log($"Skamtebord fixture material: {source.shader.name}, queue={source.renderQueue}; prior lookup={previousShader?.name}, queue={previousShader?.renderQueue}");
+        return new Material(source) { color = color };
     }
 
     internal static void PutBoardInFirstSlot(Player player)

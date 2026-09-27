@@ -10,6 +10,10 @@ From the repository root, with Steam running and Valheim closed:
 .\scripts\qa.ps1                       # Build and open a mounted, ready-to-skate QA session
 .\scripts\qa.ps1 -Mode Keyboard        # Build, run keyboard/animation/HUD checks, exit
 .\scripts\qa.ps1 -Mode Physics         # Build, run headless physics checks, exit
+.\scripts\qa.ps1 -Ramps                # Interactive ramp course, already mounted
+.\scripts\qa.ps1 -Mode Ramps           # Automated momentum/timing trials, headless
+.\scripts\qa.ps1 -Mode Ramps -Record   # Same trials with offscreen GPU capture
+.\scripts\qa.ps1 -Mode Radio           # Decode/play local MP3s and verify audio samples
 ```
 
 The launcher stages current binaries under `.local/runtime`, automatically enters a disposable solo world, and reports startup timing. It skips the startup movie, world intro text/movie, and Valkyrie ride. Default fixture mode also skips world-wide dungeon/village location placement: those locations are irrelevant to the test platform. A solid platform exists before the player spawns; readiness waits for actual ground contact and `CanMove()` rather than a fixed delay.
@@ -22,13 +26,18 @@ Options:
 - `-FreshProgression`: start at level 0 for unlock/progression tests.
 - `-FullWorld`: retain ordinary world-wide location generation for integration checks. Tests still use their temporary platform.
 - `-Mode Keyboard -Record`: record the six-second pushing/HUD sequence.
+- `-Mode Ramps -Record`: capture ramp roll-off, early jump, and lip jump into `ramp-video/` under the session root. `scripts/encode-ramp-comparison.py <session-root> media/05-ramp-momentum` creates the labelled half-speed comparison (requires `imageio-ffmpeg`).
 - `-ValheimPath <path>`: choose the installed Steam game explicitly.
+- `-RadioDirectory <path>`: choose a playlist. QA defaults to the source checkout's `radio-mp3s` folder, independently of a normal mod-manager installation.
+- `-Ramps -RenderDiagnostics`: capture the ordinary game camera with each postprocessing component temporarily disabled, then without effects/fog and in forward rendering. The original component, fog and rendering states are restored before leaving the session open. This diagnosed the ramp's transparent material fallback; the ordinary baseline capture is the acceptance view.
 
 `qa-ready.json`, `timings.csv`, screenshots, and results are written under the unique isolated save root. `.local/runtime/latest-qa-session.txt` points to the latest ready session. The launcher never changes the normal Steam/r2modman play profile. The QA process retains save/cloud/achievement suppression for its entire lifetime, including shutdown. Rebuilding the mod requires closing that process and rerunning the command.
 
 Measured on this machine: the fast physics launcher reached ready state in **22.4 seconds from process launch**, and finished checks plus shutdown in **35.2 seconds**, versus **41.8 / 54.6 seconds** with full location generation. The graphical keyboard launcher took **29.3 / 50.0 seconds** and passed all 45 checks unattended. Interactive play was mounted and ready in **29.9 seconds**. The synthetic test keyboard permits background execution; physical-device focus policy is unchanged. Measurements vary between runs. Engine timers exclude the process startup/shutdown overhead included in these launcher measurements.
 
 ## Manual harness setup
+
+Ramp mode seeds velocity once on the flat approach, then lets the ordinary owner physics and real MeshColliders handle ascent, takeoff, gravity, and landing. It injects control requests, as the physics suite does; it is not an OS keyboard test. Eleven trials cover 10/12/16 m/s approaches, 20°/35° ramps, a terrain-shaped crest, early/lip/grace/late jumps, repeated jump presses, and attempted pushing in the air. Telemetry is in `ramps.csv` and per-flight `ramp-*.csv`. Peak heights are measured from the flat floor; the lip is 1.25 m high. These repeatable fixtures do not replace natural-terrain, wood-roof, or multiplayer acceptance tests.
 
 Build:
 
@@ -74,6 +83,10 @@ The fixed camera, lighting, and flat platform are test fixtures. These keyboard 
 The test also checks that the support foot stays planted, push clips add no root travel, a second mount/dismount restores movement, and the HUD fits 1280×720 and 2560×1440 windows. Add `-skamtebord-keyboard-capture` to record six seconds at 30 frames per simulation second under `<test-root>/push-video/`. Those PNGs include the actual HUD; encode them at 30 fps with FFmpeg. Capture uses S for one second, W for 3.5 seconds, then releases W for 1.5 seconds. It does not inject forces or animation poses.
 
 ## Recording short gameplay demonstrations
+
+In 0.3.0, Keyboard mode also tests sprint acceleration/stamina, the Humanoid tuck's planted feet and hip height, momentum on sprint release, hold/toggle run preferences, and one-time control migration. The game preference is restored in memory without saving. The same run renders both ramp shapes over a large floor from six viewpoints, including front/back at 60 metres, using the normal game camera's rendering path. Keeping the floor in this test catches the transparent-sprite fallback that isolated mesh rendering missed. Fixtures clone an opaque material from the game's Wood prefab instead of relying on Shader.Find to locate bundled shaders.
+
+Radio mode requires at least one local MP3. It checks up to eight shuffled tracks for successful decoding, advancing sample position and nonzero AudioSource output, then exercises skipping, toggle off/on, and stopping on dismount. It also checks temporary game-music muting, restoration of a pre-existing mute, retained music-volume changes, zero radio volume, component disable/re-enable, and empty/corrupt playlists. The harness restores its temporary settings; it never saves game music preferences. This verifies Unity audio output, not physical speaker audibility. No music is copied into evidence or packaged.
 
 Add `-skamtebord-capture` and enable the renderer by omitting `-nographics`:
 

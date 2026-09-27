@@ -1,0 +1,55 @@
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS radio discovers MP3s from the configured QA folder
+PASS radio is enabled
+PASS track 1 decodes and starts playback
+PASS track 1 advances and produces non-silent audio samples (peak=0.27672)
+PASS track 1 temporarily mutes Valheim music
+PASS track 2 decodes and starts playback
+PASS track 2 advances and produces non-silent audio samples (peak=0.27672)
+PASS track 2 temporarily mutes Valheim music
+PASS track 3 decodes and starts playback
+PASS track 3 advances and produces non-silent audio samples (peak=0.00089)
+PASS track 3 temporarily mutes Valheim music
+PASS track 4 decodes and starts playback
+PASS track 4 advances and produces non-silent audio samples (peak=0.00089)
+PASS track 4 temporarily mutes Valheim music
+PASS track 5 decodes and starts playback
+PASS track 5 advances and produces non-silent audio samples (peak=0.00018)
+PASS track 5 temporarily mutes Valheim music
+PASS track 6 decodes and starts playback
+PASS track 6 advances and produces non-silent audio samples (peak=0.00025)
+PASS track 6 temporarily mutes Valheim music
+PASS playlist visits distinct tracks before repeating
+PASS radio toggle stops playback
+PASS radio toggle immediately restores the previous game music mute state
+PASS radio toggle resumes playback
+PASS resumed radio mutes game music again
+PASS radio muting leaves music preferences and master audio volume unchanged
+PASS game music remains muted after a live volume adjustment
+PASS ending playback preserves a music-volume change made during the ride
+PASS a pre-existing game music mute is preserved
+PASS zero-volume radio releases the game music mute
+PASS raising radio volume mutes game music again
+PASS disabling the radio component restores game music immediately
+PASS re-enabled radio resumes playback and game music muting
+PASS an empty playlist leaves game music available
+PASS a failed MP3 decode leaves game music available
+PASS restoring the valid playlist resumes radio and music muting
+PASS radio stops on dismount
+PASS dismount immediately restores game music
+SUCCESS Actual MP3 decode and audio output verified; no music included in evidence.

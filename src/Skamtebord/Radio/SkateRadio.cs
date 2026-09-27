@@ -9,10 +9,11 @@ using UnityEngine.Networking;
 
 namespace Skamtebord.Radio
 {
-    /// <summary>Local, optional MP3 playback. Does not touch Valheim's music mixer.</summary>
+    /// <summary>Local MP3 playback, temporarily muting game music while audible.</summary>
     public sealed class SkateRadio : MonoBehaviour
     {
         private readonly System.Random _random = new System.Random();
+        private readonly GameMusicMute _gameMusic = new GameMusicMute();
         private List<string> _tracks = new List<string>();
         private ConfigEntry<bool> _enabled;
         private ConfigEntry<string> _directory;
@@ -36,6 +37,7 @@ namespace Skamtebord.Radio
         private string _playingPath;
 
         public string NowPlaying { get; private set; } = string.Empty;
+        public string Status { get; private set; } = "Ready";
         public bool IsEnabled => _initialized && _enabled.Value;
         private bool CanPlay => _initialized && _skating && IsEnabled && isActiveAndEnabled;
 
@@ -51,7 +53,7 @@ namespace Skamtebord.Radio
             var defaultDirectory = Path.Combine(_pluginDirectory, "radio-mp3s");
             _enabled = config.Bind("Radio", "Enabled", true,
                 "Play your local MP3 files while skating. No music files are included.");
-            _directory = config.Bind("Radio", "Directory", defaultDirectory,
+            _directory = config.Bind("Radio", "Directory", "radio-mp3s",
                 "Folder containing MP3 files; subfolders are ignored. Relative paths use the mod folder. " +
                 "Remount the board to discover newly added files. URLs are not supported.");
             _volume = config.Bind("Radio", "Volume", 0.55f,
@@ -128,6 +130,7 @@ namespace Skamtebord.Radio
 
             _source.volume = Mathf.MoveTowards(_source.volume, Mathf.Clamp01(_volume.Value),
                 Time.unscaledDeltaTime * 3f);
+            UpdateGameMusicMute();
             if (_loading || _exhausted || AudioListener.pause)
                 return;
             if (_source.isPlaying)
@@ -148,6 +151,13 @@ namespace Skamtebord.Radio
             }
             BeginNextTrack();
         }
+
+        // Catch clip completion, external pause/mute and a replaced scene music
+        // source even when Update exits early for loading, exhaustion or a pause.
+        private void LateUpdate() => UpdateGameMusicMute();
+
+        private void UpdateGameMusicMute() => _gameMusic.SetMuted(CanPlay && _source
+            && _source.isPlaying && !_source.mute && _source.volume > 0f && !AudioListener.pause);
 
         private void Restart()
         {
@@ -172,10 +182,19 @@ namespace Skamtebord.Radio
                 if (truncated)
                     _logger.LogWarning("Radio folder scan limit reached; use a smaller MP3 folder.");
                 if (_tracks.Count == 0)
+                {
+                    Status = "No MP3s · check Radio/Directory";
                     _logger.LogInfo("No MP3 files in skating radio folder: " + directory);
+                }
+                else
+                {
+                    Status = "Loading radio…";
+                    _logger.LogInfo("Skating radio found " + _tracks.Count + " MP3 files in " + directory);
+                }
             }
             catch (Exception error) when (IsFileError(error))
             {
+                Status = "Cannot read Radio/Directory";
                 _logger.LogWarning("Could not scan skating radio folder: " + error.Message);
             }
             _exhausted = _tracks.Count == 0;
@@ -218,6 +237,7 @@ namespace Skamtebord.Radio
                     yield return null;
                 }
                 _exhausted = true;
+                Status = "No playable MP3s · Next rescans";
                 _logger.LogInfo("Skating radio stopped: no playable MP3 files remain. " +
                     "Remount, change the folder, or press next track to scan again.");
             }
@@ -243,6 +263,7 @@ namespace Skamtebord.Radio
                 _playingPath = path;
                 _previousTrack = path;
                 NowPlaying = Path.GetFileNameWithoutExtension(path);
+                Status = "Playing";
                 return true;
             }
             catch (Exception error)
@@ -350,6 +371,7 @@ namespace Skamtebord.Radio
                 _source.Stop();
                 _source.clip = null;
             }
+            _gameMusic.Dispose();
             if (_clip != null)
                 Destroy(_clip);
             _clip = null;
