@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Skamtebord.Core/Skamtebord.Core.csproj" />
+    <Compile Include="../../src/Skamtebord/Radio/RadioPlaylist.cs" Link="Radio/RadioPlaylist.cs" />
+  </ItemGroup>
+</Project>

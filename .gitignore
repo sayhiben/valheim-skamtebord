@@ -1,0 +1,15 @@
+.local/
+.tools/
+**/bin/
+**/obj/
+dist/
+Environment.props
+*.user
+radio-mp3s/*.mp3
+assets/SkamtebordAnimations/Library/
+assets/SkamtebordAnimations/Temp/
+assets/SkamtebordAnimations/Logs/
+assets/SkamtebordAnimations/UserSettings/
+*.blend1
+__pycache__/
+*.py[cod]

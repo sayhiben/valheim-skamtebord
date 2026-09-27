@@ -1,0 +1,34 @@
+Skamtebord 0.1.0 - real Unity runtime validation
+Valheim 1.0.15 / Unity 6000.0.75 / BepInExPack 5.4.2350 / Jotunn 2.30.1
+Checked 2026-09-20 on Windows in an isolated headless solo world.
+Tested DLL SHA256: 47FBCF6DB7DD65F66251B45FEC40CC2A57482CE7368F32195194C2BD4EB1DC2D
+
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS character settles on real static collider
+PASS mount succeeds with inventory board
+PASS owner physics accelerates under push: 0.00 -> 9.04 m/s
+PASS owner physics steering rotates board heading
+PASS ollie leaves ground under Unity gravity
+PASS ollie safely lands and keeps skating
+PASS safe landed combo banks lifetime XP: 100
+PASS coasting advances while mounted after landing: speed=8.134->7.097 m/s, distance=22.882m
+PASS brake test establishes moving baseline: 7.097 m/s
+PASS braking reduces owner velocity; speed=7.097->0.000 simulationSeconds=1.000 realSeconds=0.999
+PASS dismount restores walking mode
+PASS character settles on inclined static collider
+PASS board mounts on a 12-degree slope
+PASS gravity alone accelerates downhill: 9.47 m/s
+PASS save isolation remains active after simulation
+
+SUCCESS: 25 real Unity checks passed.
+Input focus was bypassed for injected controls. No visual/audio/multiplayer assertions.
+Game saves and achievement writes were disabled for the isolated harness process.

@@ -1,0 +1,39 @@
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS character settles on real static collider
+PASS normal PlayerController remains enabled
+PASS B key mounts through the normal keyboard binding
+PASS rider uses an AnimatorOverrideController
+PASS mount preserves Valheim's root-motion setting and animator state
+PASS W key pushes: 0.00->7.78 m/s
+PASS Humanoid SkatePush clip plays while pushing
+PASS push animation adds no root travel (0.00000m maximum per frame)
+PASS front support foot stays planted through the push cycle
+PASS pushing foot visibly moves through the cycle
+PASS releasing W returns to coasting
+PASS D key steers through PlayerController
+PASS Space key launches an ollie
+PASS keyboard ollie lands and retains the ride
+PASS keyboard ollie banks Skamtebord XP
+PASS S key brakes the board
+PASS Tab opens the ordinary inventory
+PASS inventory blocks mount and push keyboard input
+PASS Tab closes the ordinary inventory
+PASS F5 opens the ordinary console
+PASS F5 closes the ordinary console
+PASS dismount restores the original animator controller
+PASS ordinary walking works after dismount
+PASS B remounts after normal walking
+PASS HUD stays in clear screen bounds at 1280x720
+PASS HUD stays in clear screen bounds at 2560x1440
+PASS second dismount leaves the character immediately movable
+PASS keyboard test retains save isolation
+SUCCESS Keyboard events exercised normal Valheim input, animation, HUD and physics; evidence in D:\dev\valheim-skamtebord\.local\runtime\smoke-saves\skamtebord_smoke_20260927044436_7441c8

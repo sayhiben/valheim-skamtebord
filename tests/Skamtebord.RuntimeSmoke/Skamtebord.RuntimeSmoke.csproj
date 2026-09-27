@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Environment.props" Condition="Exists('../../Environment.props')" />
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Skamtebord.RuntimeSmoke</AssemblyName>
+    <Nullable>disable</Nullable>
+    <ValheimPath Condition="'$(ValheimPath)' == ''">D:\SteamLibrary\steamapps\common\Valheim</ValheimPath>
+    <ManagedPath>$(ValheimPath)\valheim_Data\Managed</ManagedPath>
+    <DependencyPath>$(MSBuildThisFileDirectory)..\..\.local\packages</DependencyPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="$(ManagedPath)\Unity.InputSystem.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\UnityEngine*.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\assembly_*.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\SoftReferenceableAssets.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\Splatform.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\gui_framework.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\System.IO.Compression.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\System.Net.Http.dll" Private="false" />
+    <Reference Include="BepInEx" HintPath="$(DependencyPath)\BepInEx\BepInExPack_Valheim\BepInEx\core\BepInEx.dll" Private="false" />
+    <Reference Include="0Harmony" HintPath="$(DependencyPath)\BepInEx\BepInExPack_Valheim\BepInEx\core\0Harmony.dll" Private="false" />
+  </ItemGroup>
+</Project>

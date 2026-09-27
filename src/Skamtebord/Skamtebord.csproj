@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Environment.props" Condition="Exists('../../Environment.props')" />
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>Skamtebord</AssemblyName>
+    <Version>0.2.0</Version>
+    <ValheimPath Condition="'$(ValheimPath)' == ''">D:\SteamLibrary\steamapps\common\Valheim</ValheimPath>
+    <ManagedPath>$(ValheimPath)\valheim_Data\Managed</ManagedPath>
+    <DependencyPath>$(MSBuildThisFileDirectory)..\..\.local\packages</DependencyPath>
+    <Nullable>annotations</Nullable>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../../assets/bundles/skamtebord-animations" LogicalName="Skamtebord.Animations" Condition="Exists('../../assets/bundles/skamtebord-animations')" />
+    <!-- Compile the small pure core into the plugin so installation needs one DLL. -->
+    <Compile Include="../Skamtebord.Core/*.cs" Link="Core/%(Filename)%(Extension)" />
+    <Reference Include="$(ManagedPath)\UnityEngine*.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\assembly_*.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\SoftReferenceableAssets.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\Splatform.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\gui_framework.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\System.IO.Compression.dll" Private="false" />
+    <Reference Include="$(ManagedPath)\System.Net.Http.dll" Private="false" />
+    <Reference Include="BepInEx" HintPath="$(DependencyPath)\BepInEx\BepInExPack_Valheim\BepInEx\core\BepInEx.dll" Private="false" />
+    <Reference Include="0Harmony" HintPath="$(DependencyPath)\BepInEx\BepInExPack_Valheim\BepInEx\core\0Harmony.dll" Private="false" />
+    <Reference Include="Jotunn" HintPath="$(DependencyPath)\Jotunn\plugins\Jotunn.dll" Private="false" />
+  </ItemGroup>
+  <Target Name="ValidateGameReferences" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('../../assets/bundles/skamtebord-animations')" Text="Animation bundle missing. Run scripts/build-animations.ps1 with Blender 4.2 and Unity 6000.0.75f1." />
+    <Error Condition="!Exists('$(ManagedPath)\assembly_valheim.dll')" Text="Valheim assemblies not found. Run scripts/build.ps1 -ValheimPath &quot;path to Valheim&quot;." />
+  </Target>
+</Project>
