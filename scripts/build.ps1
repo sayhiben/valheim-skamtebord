@@ -104,7 +104,7 @@ try {
     }
     $docs = Join-Path $root 'docs'
     if (Test-Path -LiteralPath $docs -PathType Container) {
-        foreach ($doc in (Get-ChildItem -LiteralPath $docs -File -Recurse | Where-Object { $_.Extension -in @('.md', '.txt') })) {
+        foreach ($doc in (Get-ChildItem -LiteralPath $docs -File -Recurse | Where-Object { $_.Extension -in @('.md', '.txt', '.csv') })) {
             $relative = $doc.FullName.Substring($docs.Length).TrimStart('\', '/')
             Copy-SkamtebordFile -Source $doc.FullName -Destination (Join-Path (Join-Path $staging 'docs') $relative)
         }

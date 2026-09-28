@@ -10,6 +10,8 @@ From the repository root, with Steam running and Valheim closed:
 .\scripts\qa.ps1                       # Build and open a mounted, ready-to-skate QA session
 .\scripts\qa.ps1 -Mode Keyboard        # Build, run keyboard/animation/HUD checks, exit
 .\scripts\qa.ps1 -Mode Physics         # Build, run headless physics checks, exit
+.\scripts\qa.ps1 -Mode Surfaces        # Untagged transitions, seams, downhill, crests and walls
+.\scripts\qa.ps1 -Mode Carving         # Push limits, terrain speed and banked corners in both directions
 .\scripts\qa.ps1 -Ramps                # Interactive ramp course, already mounted
 .\scripts\qa.ps1 -Mode Ramps           # Automated momentum/timing trials, headless
 .\scripts\qa.ps1 -Mode Ramps -Record   # Same trials with offscreen GPU capture
@@ -36,6 +38,16 @@ Options:
 Measured on this machine: the fast physics launcher reached ready state in **22.4 seconds from process launch**, and finished checks plus shutdown in **35.2 seconds**, versus **41.8 / 54.6 seconds** with full location generation. The graphical keyboard launcher took **29.3 / 50.0 seconds** and passed all 45 checks unattended. Interactive play was mounted and ready in **29.9 seconds**. The synthetic test keyboard permits background execution; physical-device focus policy is unchanged. Measurements vary between runs. Engine timers exclude the process startup/shutdown overhead included in these launcher measurements.
 
 ## Manual harness setup
+
+### Halfpipe and multiplayer flow
+
+`scripts/qa.ps1 -Mode Flow` verifies the registered wooden halfpipe, both vertical lips, a timed lip jump, rider orientation, damage/repair/refunds, and normal keyboard tap/hold tricks from level zero. It measures consecutive push cycles at the speed cap and compares low/high-speed steering. Screenshots and CSV flight telemetry accompany the results. `scripts/qa.ps1 -Ramps` also places a halfpipe to the right of the interactive course.
+
+`scripts/qa.ps1 -Mode Carving` runs straight and turning push/sprint limits, fast coasting with sprint held, a long unpowered descent with and without the optional terrain governor, and an airborne speed/gravity check. A rounded bowl made of an ordinary MeshCollider then exercises more than 90 degrees of banked turning in both directions, recording surface normals, rider rotation, speed, energy and support continuity. Steering inputs guide the corner trials; only the initial approach gets a velocity seed. The fixture has no halfpipe metadata or support exceptions, and temporary speed settings are restored. CSV traces and `smoke-result.txt` are saved in the reported disposable session directory.
+
+`scripts/qa-multiplayer.ps1` starts two isolated Valheim processes. A host and observer use the game's ZNet/ZDO replication over its shipped TCP transport, bound only to `127.0.0.1`. QA-only adapters pump the legacy connector, omit platform tickets for that transport, and mark the deliberately empty fixture world ready on the client. Production networking and authentication are unchanged. The observer checks replicated objects and animations; coordination files only acknowledge observations. Captures and separate peer logs are under `.local/network-qa/`.
+
+This checks actual separate-process replication, including late joining, pushing, sprinting, turning, five tricks, held grabs, halfpipe orientation, dismount/remount, piece removal and disconnect. It does not test Steam/PlayFab transport, remote latency, dedicated-server deployment, or persistence across world reloads. Both processes keep save suppression active. The launcher terminates only its own children after failures/timeouts. The harness is excluded from release ZIPs and normal play profiles.
 
 Ramp mode seeds velocity once on the flat approach, then lets the ordinary owner physics and real MeshColliders handle ascent, takeoff, gravity, and landing. It injects control requests, as the physics suite does; it is not an OS keyboard test. Eleven trials cover 10/12/16 m/s approaches, 20°/35° ramps, a terrain-shaped crest, early/lip/grace/late jumps, repeated jump presses, and attempted pushing in the air. Telemetry is in `ramps.csv` and per-flight `ramp-*.csv`. Peak heights are measured from the flat floor; the lip is 1.25 m high. These repeatable fixtures do not replace natural-terrain, wood-roof, or multiplayer acceptance tests.
 
@@ -80,7 +92,7 @@ Omit `-batchmode` and `-nographics`: the normal HUD must be created. This mode k
 
 The fixed camera, lighting, and flat platform are test fixtures. These keyboard events exercise Unity/Valheim's input path; they do not establish that Windows UI automation can deliver physical gameplay key presses. Save/cloud/achievement isolation is identical to the physics mode. Neither harness belongs in the normal r2modman profile or release archive.
 
-The test also checks that the support foot stays planted, push clips add no root travel, a second mount/dismount restores movement, and the HUD fits 1280×720 and 2560×1440 windows. Add `-skamtebord-keyboard-capture` to record six seconds at 30 frames per simulation second under `<test-root>/push-video/`. Those PNGs include the actual HUD; encode them at 30 fps with FFmpeg. Capture uses S for one second, W for 3.5 seconds, then releases W for 1.5 seconds. It does not inject forces or animation poses.
+The test also checks that the support foot stays planted, push clips add no root travel, a second mount/dismount restores movement, and the HUD fits 1280×720 and 2560×1440 windows. During synthetic keyboard testing, the maximum catch-up timestep is temporarily bounded at 50 ms so a stalled screenshot frame cannot turn a short tap into a grab hold; the actual tap duration is checked and the original timing setting is restored. The release plugin does not alter game timing. Add `-skamtebord-keyboard-capture` to record six seconds at 30 frames per simulation second under `<test-root>/push-video/`. Those PNGs include the actual HUD; encode them at 30 fps with FFmpeg. Capture uses S for one second, W for 3.5 seconds, then releases W for 1.5 seconds. It does not inject forces or animation poses.
 
 ## Recording short gameplay demonstrations
 

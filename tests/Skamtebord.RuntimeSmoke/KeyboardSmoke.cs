@@ -44,6 +44,11 @@ internal static class KeyboardSmoke
         held = new KeyboardState();
         InputSystem.onBeforeUpdate += QueueKeyboard;
         bool originalToggleRun = ZInput.ToggleRun;
+        float originalMaximumDelta = Time.maximumDeltaTime;
+        // A stalled screenshot/render frame must not turn a synthetic 50 ms
+        // tap into a 333 ms hold before the coroutine can submit key release.
+        // This is QA timing only; normal gameplay time settings stay untouched.
+        Time.maximumDeltaTime = .05f;
         ZInput.ToggleRun = false;
         try
         {
@@ -152,12 +157,15 @@ internal static class KeyboardSmoke
             yield return Hold(.35f, Key.D);
             yield return Hold(.15f);
             check(Mathf.Abs(Mathf.DeltaAngle(heading, body.rotation.eulerAngles.y)) > 7f, "D key steers through PlayerController");
-            yield return Hold(.12f, Key.Space);
+            float tapStart = Time.time;
+            yield return Hold(.05f, Key.Space);
+            check(Time.time-tapStart<.12f, $"synthetic jump tap stays below the grab threshold ({Time.time-tapStart:F3}s)");
             check(!Get<bool>(rider, "Grounded"), "Space key launches an ollie");
             yield return Hold(3f);
             check(Get<bool>(rider, "Riding") && Get<bool>(rider, "Grounded"), "keyboard ollie lands and retains the ride");
             object progression = Get<object>(rider, "Progression");
-            check(Get<long>(progression, "LifetimePoints") - initialPoints == 100, "keyboard ollie banks 100 newly earned Skamtebord XP");
+            long earned = Get<long>(progression,"LifetimePoints")-initialPoints;
+            check(earned == 100, $"keyboard ollie banks 100 newly earned Skamtebord XP (actual={earned}, status={Get<string>(rider,"Status")})");
             yield return Hold(.9f, Key.S);
             yield return Hold(.1f);
             check(Speed(body) < 1f, "S key brakes the board");
@@ -238,9 +246,11 @@ internal static class KeyboardSmoke
             {
                 player.AddStamina(100f);
                 yield return Hold(.6f, Key.W);
-                yield return Hold(.24f, Key.Space);
+                yield return Hold(.06f, Key.Space);
+                yield return Hold(.1f); // A tap: holding jump now deliberately starts a grab.
                 yield return Hold(.08f, trickKeys[i]);
                 string currentTrick = AccessTools.Field(rider.GetType(), "visualTrick").GetValue(rider).ToString();
+                log($"DIRECT_TRICK key={trickKeys[i]} actual={currentTrick} riding={Get<bool>(rider,"Riding")} grounded={Get<bool>(rider,"Grounded")} position={body.position} velocity={body.linearVelocity} status={Get<string>(rider,"Status")}");
                 check(currentTrick == trickNames[i], trickKeys[i] + " triggers " + trickNames[i] + " through the real trick binding");
                 yield return Hold(1f);
                 // These short flat ollies test input, not completing the longer advanced tricks.
@@ -279,6 +289,7 @@ internal static class KeyboardSmoke
         }
         finally
         {
+            Time.maximumDeltaTime = originalMaximumDelta;
             ZInput.ToggleRun = originalToggleRun;
             InputSystem.onBeforeUpdate -= QueueKeyboard;
             if (keyboard != null) InputSystem.RemoveDevice(keyboard);

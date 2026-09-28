@@ -1,0 +1,42 @@
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS second Valheim process completes the real ZNet peer handshake
+PASS late-joining observer sees an already-mounted rider and the persistent halfpipe
+PASS observer verifies replicated movement, pushing, sprint tuck and turning
+PASS host reaches the lip for Shuvit
+PASS host submits Shuvit during the flight
+PASS observer sees timestamped Shuvit animation on the replicated board
+PASS host reaches the lip for Kickflip
+PASS host submits Kickflip during the flight
+PASS observer sees timestamped Kickflip animation on the replicated board
+PASS host reaches the lip for Heelflip
+PASS host submits Heelflip during the flight
+PASS observer sees timestamped Heelflip animation on the replicated board
+PASS host reaches the lip for Grab
+PASS host submits Grab during the flight
+PASS observer sees timestamped Grab animation on the replicated board
+PASS host reaches the lip for ThreeSixty
+PASS host submits ThreeSixty during the flight
+PASS observer sees timestamped ThreeSixty animation on the replicated board
+PASS host reaches the transition for a sustained airborne grab
+PASS host starts the held grab through captured jump input
+PASS host reaches the vertical lip for the replicated surface pose
+PASS observer sees the curved halfpipe ride and surface-aligned body/board
+PASS host stays upright after dismount and two physics ticks
+PASS observer sees dismount, remount and halfpipe removal
+PASS observer disconnect is handled by the normal network lifecycle
+SUCCESS Two-process ZNet replication checks completed for host

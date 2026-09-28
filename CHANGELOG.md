@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0 — 2026-09-27
+
+- Tap jump again in the air for a random unlocked trick; hold jump to grab. Shuvits and grabs are available immediately, with flips and spins retaining their XP unlocks.
+- Add the Wooden halfpipe to Hammer → Skamtebord: 80 Wood and a workbench, normal damage/repair, and recoverable materials.
+- Follow curved riding surfaces with the player, board and existing momentum. Vertical halfpipe lips launch upward, with timed ollies adding height.
+- Apply shared skating support rules to untagged terrain and build pieces, including vertical transitions. Bridge small seams using bounded wheel probes and speed/curvature checks; retain natural crest takeoff, downhill gravity and rollback without ground adhesion.
+- Feed accepted skating contacts into ground bookkeeping, fade pushing toward vertical, and detect wall bails from incoming speed before the collision solver stops the rider.
+- Tighten low-speed steering while retaining wider turns at speed; lean into turns and preserve the skating stance in flight.
+- Bound pushing by total surface speed and the remaining acceleration budget, including while turning. Preserve terrain-earned momentum through carving and bank with curved support surfaces.
+- Apply the optional soft speed governor only along supported terrain, never to airborne motion. Keep the 25 m/s default and existing custom values; allow `MaximumSpeed = 0` to disable it.
+- Keep pushing animation intent active while forward is held, including at the push speed limit.
+- Synchronize turn lean, held grabs, full rider rotation and shared trick start times for remote players, including joining mid-ride.
+- Add halfpipe/input/animation QA and a two-process loopback ZNet observer harness.
+- Add live speed-budget and banked-corner QA, including turning push caps, unpowered downhill runs, an optional uncapped run, airborne momentum, and left/right corner telemetry. Bound synthetic keyboard catch-up timing so a render stall cannot change a test tap into a grab hold.
+
 ## 0.3.1
 
 - Publish an installable GitHub release ZIP with SHA-256 checksum, r2modman metadata, and step-by-step installation/update instructions.

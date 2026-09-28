@@ -215,7 +215,7 @@ static void EmptyAirborne()
 
 static void Unlocks()
 {
-    int[] levels = { 0, 3, 8, 12, 18, 25 };
+    int[] levels = { 0, 0, 8, 12, 0, 25 };
     Require(TrickCatalog.All.Count == levels.Length);
     for (int i = 0; i < levels.Length; i++)
     {

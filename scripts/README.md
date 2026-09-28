@@ -2,7 +2,7 @@
 
 To play without building, download the compiled ZIP from [GitHub Releases](https://github.com/sayhiben/valheim-skamtebord/releases) and follow the [installation guide](../docs/install.md). The instructions below are for development from a source checkout.
 
-For development playtests, use **`scripts/qa.ps1`**. It builds and launches a separate disposable QA session with intros skipped, a board in slot 1, every skating trick unlocked, and normal controls. `-Mode Keyboard` or `-Mode Physics` runs automated checks and exits. Use `-NoBuild` for another run of the same binaries, `-FreshProgression` for level-zero checks, and `-FullWorld` when ordinary world generation matters. See the [QA harness instructions](../tests/Skamtebord.RuntimeSmoke/README.md).
+For development playtests, use **`scripts/qa.ps1`**. It builds and launches a separate disposable QA session with intros skipped, a board in slot 1, every skating trick unlocked, and normal controls. `-Mode Keyboard` or `-Mode Physics` runs automated checks and exits; `-Mode Carving` checks push limits, downhill momentum and banked corners. Use `-NoBuild` for another run of the same binaries, `-FreshProgression` for level-zero checks, and `-FullWorld` when ordinary world generation matters. See the [QA harness instructions](../tests/Skamtebord.RuntimeSmoke/README.md).
 
 Run from PowerShell on Windows with .NET SDK 8 or later and the current Steam installation of Valheim.
 
@@ -15,8 +15,8 @@ Steam's registry entries and `libraryfolders.vdf` locate the game. Override dete
 Outputs:
 
 - `dist/Skamtebord/`: plugin DLL, documentation, package metadata, and an empty radio folder with instructions.
-- `dist/Skamtebord-0.3.1.zip`: Thunderstore layout with the DLL under `BepInEx/plugins/Skamtebord/`, plus the manifest, icon, and documentation. No game assemblies, dependency DLLs, or music are bundled.
-- `dist/Skamtebord-0.3.1.zip.sha256`: SHA-256 checksum of the release ZIP, suitable for publishing alongside it.
+- `dist/Skamtebord-0.4.0.zip`: Thunderstore layout with the DLL under `BepInEx/plugins/Skamtebord/`, plus the manifest, icon, and documentation. No game assemblies, dependency DLLs, or music are bundled.
+- `dist/Skamtebord-0.4.0.zip.sha256`: SHA-256 checksum of the release ZIP, suitable for publishing alongside it.
 
 The plugin embeds `assets/bundles/skamtebord-animations`. The checked-in bundle is sufficient for normal builds. To regenerate it, run `scripts/build-animations.ps1 -BlenderPath <blender.exe> -UnityPath <Unity.exe>` with Blender 4.2 and Unity **6000.0.75f1**. Defaults point to the local tools used for authoring. The Unity builder rejects other editor versions and validates the Humanoid clips before bundling.
 

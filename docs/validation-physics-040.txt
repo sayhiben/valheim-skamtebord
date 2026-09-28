@@ -1,0 +1,31 @@
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS mount succeeds with inventory board; Status=[Push forward. Find a hill. Land something ridiculous.] Riding=True CanRide=True HasBoard=True IsLocal=True isLocalPlayer=True viewValid=True owner=True onGround=True onFixture=True collider=RuntimeSmoke temporary flat physics platform dead=False teleport=False swimming=False attached=False intro=False cutscene=False dodge=False attack=False stagger=False knockback=False encumbered=False placeMode=False debugFly=False canMove=True emote=False position=(0.00, 250.00, 0.00) velocity=(0.00, 0.00, 0.00) damping=0.000 gravity=(0.00, -20.00, 0.00) useGravity=True kinematic=False sleeping=False layer=character animator=path=Player(Clone)/Visual,sameAsPlayerRoot=False,enabled=True,cull=AlwaysAnimate,speed=1,state=-409901381,tag=-601574123 inventory=[Torch:$item_torch,ArmorRagsChest:$item_chest_rags,Skamtebord_Board:Skamtebord]
+PASS owner physics accelerates under push: 0.00 -> 8.99 m/s
+PASS owner physics steering rotates board heading
+PASS ollie leaves ground under Unity gravity
+PASS ollie safely lands and keeps skating
+PASS safe landed combo banks 100 new lifetime XP: 100
+PASS coasting advances while mounted after landing: speed=8.834->7.867 m/s, distance=25.209m
+PASS brake test establishes moving baseline: 7.867 m/s
+PASS braking reduces owner velocity; speed=7.867->0.000 simulationSeconds=1.020 realSeconds=1.020; Status=[+100 Skamtebord XP] Riding=True CanRide=True HasBoard=True IsLocal=True isLocalPlayer=True viewValid=True owner=True onGround=True onFixture=True collider=RuntimeSmoke temporary flat physics platform dead=False teleport=False swimming=False attached=False intro=False cutscene=False dodge=False attack=False stagger=False knockback=False encumbered=False placeMode=False debugFly=False canMove=True emote=False position=(21.04, 250.00, 40.46) velocity=(0.00, 0.00, 0.00) damping=0.000 gravity=(0.00, -20.00, 0.00) useGravity=True kinematic=False sleeping=False layer=character animator=path=Player(Clone)/Visual,sameAsPlayerRoot=False,enabled=True,cull=AlwaysAnimate,speed=1,state=-409901381,tag=-601574123 inventory=[Torch:$item_torch,ArmorRagsChest:$item_chest_rags,Skamtebord_Board:Skamtebord]
+PASS dismount restores walking mode
+PASS character settles on inclined static collider
+PASS board mounts on a 12-degree slope; Status=[Push forward. Find a hill. Land something ridiculous.] Riding=True CanRide=True HasBoard=True IsLocal=True isLocalPlayer=True viewValid=True owner=True onGround=True onFixture=True collider=RuntimeSmoke temporary flat physics platform dead=False teleport=False swimming=False attached=False intro=False cutscene=False dodge=False attack=False stagger=False knockback=False encumbered=False placeMode=False debugFly=False canMove=True emote=False position=(0.00, 253.09, -14.39) velocity=(0.00, 0.00, 0.00) damping=0.000 gravity=(0.00, -20.00, 0.00) useGravity=True kinematic=False sleeping=False layer=character animator=path=Player(Clone)/Visual,sameAsPlayerRoot=False,enabled=True,cull=AlwaysAnimate,speed=1,state=-1272536316,tag=0 inventory=[Torch:$item_torch,ArmorRagsChest:$item_chest_rags,Skamtebord_Board:Skamtebord]
+PASS gravity alone accelerates downhill: 9.39 m/s
+PASS save isolation remains active after simulation
+SUCCESS Real Unity recipe, owner push/steer/ollie/landing/XP/brake/dismount/downhill checks completed.

@@ -31,6 +31,16 @@ internal static class RampSmoke
         CreateRamp(origin + new Vector3(0, 0, 12), RunLength, false);
         CreateRamp(origin + new Vector3(-14, 0, 12), Rise / Mathf.Tan(35f * Mathf.Deg2Rad), false);
         CreateRamp(origin + new Vector3(14, 0, 12), RunLength, true);
+        FlowSmoke.CreatePipe(origin + new Vector3(32,.28f,18));
+        // Ready-to-build QA inventory and station, confined to the disposable course.
+        if (Player.m_localPlayer)
+        {
+            Player.m_localPlayer.GetInventory().AddItem(ObjectDB.instance.GetItemPrefab("Hammer"),1);
+            Player.m_localPlayer.GetInventory().AddItem(ObjectDB.instance.GetItemPrefab("Wood"),80);
+            var station = UnityEngine.Object.Instantiate(ZNetScene.instance.GetPrefab("piece_workbench"),origin+new Vector3(24,0,18),Quaternion.identity);
+            station.GetComponent<Piece>().SetCreator(Player.m_localPlayer.GetPlayerID(),UserInfo.GetLocalUser().UserId);
+            station.GetComponent<WearNTear>().OnPlaced();
+        }
     }
 
     internal static GameObject CreateRamp(Vector3 origin, float length, bool crest)
@@ -134,16 +144,18 @@ internal static class RampSmoke
                     {
                         float z = body.position.z - origin.z;
                         float age = (float)AccessTools.Field(typeof(Character), "m_lastGroundTouch").GetValue(player);
-                        // UpdateMotion increments contact age after Step, so one fixed delta
-                        // here means an actual collision was consumed this tick.
-                        bool touching = age <= Time.fixedDeltaTime + .001f;
+                        // The rider includes surface contacts that vanilla's upright
+                        // capsule ground detector omits during rotation onto the incline.
+                        bool touching = Get<bool>(rider,"Grounded");
                         if (touching) lastContactTime = Time.time;
                         if (z > 1 && touching && !take.Airborne)
                         {
                             take.LipSpeed = new Vector2(body.linearVelocity.x, body.linearVelocity.z).magnitude;
                             take.LipUp = body.linearVelocity.y;
                         }
-                        if (!touching && !take.Airborne)
+                        // A momentary bump at the foot of a ramp is not its lip flight.
+                        float lip = Rise / Mathf.Tan(take.Angle * Mathf.Deg2Rad);
+                        if (!touching && !take.Airborne && (take.JumpSent || z > lip-.6f))
                         {
                             take.Airborne = true; airStart = Time.time;
                             take.ExitSpeed = new Vector2(body.linearVelocity.x, body.linearVelocity.z).magnitude;
