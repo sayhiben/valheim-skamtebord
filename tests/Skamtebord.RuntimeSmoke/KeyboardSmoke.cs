@@ -166,9 +166,16 @@ internal static class KeyboardSmoke
             object progression = Get<object>(rider, "Progression");
             long earned = Get<long>(progression,"LifetimePoints")-initialPoints;
             check(earned == 100, $"keyboard ollie banks 100 newly earned Skamtebord XP (actual={earned}, status={Get<string>(rider,"Status")})");
+            Vector3 brakingDirection=body.linearVelocity.normalized;
             yield return Hold(.9f, Key.S);
+            check(Vector3.Dot(body.linearVelocity,brakingDirection)<1f, "S key brakes the original rolling direction");
+            yield return Hold(1.2f, Key.S);
+            check(Get<bool>(rider,"Backing") && Vector3.Dot(body.linearVelocity,player.transform.forward)<-2.7f && Speed(body)<3.05f,
+                "holding S after stopping backs up through the normal PlayerController, capped at 3 m/s");
+            check(Get<bool>(rider,"Pushing") && animator.GetCurrentAnimatorClipInfo(0).Any(c=>c.clip.name=="SkatePush" && c.weight>.2f),
+                "backing up displays the synchronized push animation");
             yield return Hold(.1f);
-            check(Speed(body) < 1f, "S key brakes the board");
+            check(!Get<bool>(rider,"Backing"), "releasing S exits reverse control");
 
             Transform hips = animator.GetBoneTransform(HumanBodyBones.Hips);
             float coastHipHeight = player.transform.InverseTransformPoint(hips.position).y;

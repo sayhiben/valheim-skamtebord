@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0 — 2026-09-28
+
+- Smooth ordinary terrain orientation across a board-sized patch and over time; prevent changing cross-slopes from accumulating steering drift while retaining fast steep-transition response.
+- Counterlean the torso toward vertical and solve the legs back to their animated foot targets. Apply the same balance to remote riders and restore the original pose on dismount.
+- Add stamina-gated uphill gravity compensation within existing push-speed limits. Align mounting with the standing slope and ignore small slips when choosing forward versus fakie propulsion.
+- Keep skating after glancing hits, low obstacle contacts and moderate collisions. Retain physical blocking and severe head-on crash bails, with a configurable 12 m/s impact threshold.
+- Add rough-slope, real generated-terrain, uphill assistance, pose and collision QA, including remote balance/dismount checks.
+- Increase default ground steering and give air turns an independent 540°/second rate. Releasing air steering retains the chosen orientation without injecting velocity.
+- Push and sprint in the current rolling direction after backward landings and rollbacks, keeping fakie halfpipe transfers moving.
+- Hold backward to brake, then back up at a configurable 3 m/s. Steering remains available while reversing; show reverse status and the synchronized pushing pose.
+- Aim the ollie impulse along actual uphill travel when riding backward. Preserve forward/sprint push limits, terrain momentum, and custom steering settings.
+- Add runtime handling checks and normal-keyboard reverse checks, plus the reproducible craft/build/ride video capture harness.
+- Update the installation guide for 0.5.0; all multiplayer peers must update together. Keep personal radio archives and playlists out of version control as well as individual MP3s.
+
 ## 0.4.0 — 2026-09-27
 
 - Tap jump again in the air for a random unlocked trick; hold jump to grab. Shuvits and grabs are available immediately, with flips and spins retaining their XP unlocks.

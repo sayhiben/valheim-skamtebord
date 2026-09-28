@@ -12,10 +12,13 @@ From the repository root, with Steam running and Valheim closed:
 .\scripts\qa.ps1 -Mode Physics         # Build, run headless physics checks, exit
 .\scripts\qa.ps1 -Mode Surfaces        # Untagged transitions, seams, downhill, crests and walls
 .\scripts\qa.ps1 -Mode Carving         # Push limits, terrain speed and banked corners in both directions
+.\scripts\qa.ps1 -Mode Handling        # Faster turns, brake/reverse, fakie halfpipe transfers
+.\scripts\qa.ps1 -Mode Terrain         # Rough slopes, uphill starts, balance, obstacles and native terrain
 .\scripts\qa.ps1 -Ramps                # Interactive ramp course, already mounted
 .\scripts\qa.ps1 -Mode Ramps           # Automated momentum/timing trials, headless
 .\scripts\qa.ps1 -Mode Ramps -Record   # Same trials with offscreen GPU capture
 .\scripts\qa.ps1 -Mode Radio           # Decode/play local MP3s and verify audio samples
+.\scripts\qa.ps1 -Mode Demo            # Capture a 40-second craft/build/ride video with game audio
 ```
 
 The launcher stages current binaries under `.local/runtime`, automatically enters a disposable solo world, and reports startup timing. It skips the startup movie, world intro text/movie, and Valkyrie ride. Default fixture mode also skips world-wide dungeon/village location placement: those locations are irrelevant to the test platform. A solid platform exists before the player spawns; readiness waits for actual ground contact and `CanMove()` rather than a fixed delay.
@@ -45,9 +48,11 @@ Measured on this machine: the fast physics launcher reached ready state in **22.
 
 `scripts/qa.ps1 -Mode Carving` runs straight and turning push/sprint limits, fast coasting with sprint held, a long unpowered descent with and without the optional terrain governor, and an airborne speed/gravity check. A rounded bowl made of an ordinary MeshCollider then exercises more than 90 degrees of banked turning in both directions, recording surface normals, rider rotation, speed, energy and support continuity. Steering inputs guide the corner trials; only the initial approach gets a velocity seed. The fixture has no halfpipe metadata or support exceptions, and temporary speed settings are restored. CSV traces and `smoke-result.txt` are saved in the reported disposable session directory.
 
+`scripts/qa.ps1 -Mode Terrain` uses rough triangle meshes at 0°, 25° and 35° to measure contact/frame jitter, lateral drift and support gaps. A slope comparison verifies that uphill assistance requires input, stamina and its enabled setting. Rendered Humanoid checks compare torso angle and foot placement with balance disabled/enabled. Real obstacle collisions cover moderate head-on stops, fast glancing hits, severe crashes and a 30 cm curb. Finally, the harness selects a clear uphill line on the generated map's untouched Heightmap, removes its elevated platform, and pushes along that route without seeded velocity or terrain edits. This checks a selected route on one seed, not every biome or obstacle arrangement. `terrain-metrics.txt`, CSV traces, balance screenshots and `native-frames/` are written to the session directory. Direct input injection and stamina replenishment isolate the movement tests; the Keyboard mode separately covers ordinary controls.
+
 `scripts/qa-multiplayer.ps1` starts two isolated Valheim processes. A host and observer use the game's ZNet/ZDO replication over its shipped TCP transport, bound only to `127.0.0.1`. QA-only adapters pump the legacy connector, omit platform tickets for that transport, and mark the deliberately empty fixture world ready on the client. Production networking and authentication are unchanged. The observer checks replicated objects and animations; coordination files only acknowledge observations. Captures and separate peer logs are under `.local/network-qa/`.
 
-This checks actual separate-process replication, including late joining, pushing, sprinting, turning, five tricks, held grabs, halfpipe orientation, dismount/remount, piece removal and disconnect. It does not test Steam/PlayFab transport, remote latency, dedicated-server deployment, or persistence across world reloads. Both processes keep save suppression active. The launcher terminates only its own children after failures/timeouts. The harness is excluded from release ZIPs and normal play profiles.
+This checks actual separate-process replication, including late joining, pushing, sprinting, turning, five tricks, held grabs, halfpipe orientation, reverse movement, air steering, torso balance on an incline, dismount/remount, piece removal and disconnect. It does not test Steam/PlayFab transport, remote latency, dedicated-server deployment, or persistence across world reloads. Both processes keep save suppression active. The launcher terminates only its own children after failures/timeouts. The harness is excluded from release ZIPs and normal play profiles.
 
 Ramp mode seeds velocity once on the flat approach, then lets the ordinary owner physics and real MeshColliders handle ascent, takeoff, gravity, and landing. It injects control requests, as the physics suite does; it is not an OS keyboard test. Eleven trials cover 10/12/16 m/s approaches, 20°/35° ramps, a terrain-shaped crest, early/lip/grace/late jumps, repeated jump presses, and attempted pushing in the air. Telemetry is in `ramps.csv` and per-flight `ramp-*.csv`. Peak heights are measured from the flat floor; the lip is 1.25 m high. These repeatable fixtures do not replace natural-terrain, wood-roof, or multiplayer acceptance tests.
 
@@ -95,6 +100,35 @@ The fixed camera, lighting, and flat platform are test fixtures. These keyboard 
 The test also checks that the support foot stays planted, push clips add no root travel, a second mount/dismount restores movement, and the HUD fits 1280×720 and 2560×1440 windows. During synthetic keyboard testing, the maximum catch-up timestep is temporarily bounded at 50 ms so a stalled screenshot frame cannot turn a short tap into a grab hold; the actual tap duration is checked and the original timing setting is restored. The release plugin does not alter game timing. Add `-skamtebord-keyboard-capture` to record six seconds at 30 frames per simulation second under `<test-root>/push-video/`. Those PNGs include the actual HUD; encode them at 30 fps with FFmpeg. Capture uses S for one second, W for 3.5 seconds, then releases W for 1.5 seconds. It does not inject forces or animation poses.
 
 ## Recording short gameplay demonstrations
+
+`-Mode Demo` captures 1,200 actual game frames at 1280×720 / 30 fps under
+`demo-frames/`, plus synchronized stereo `demo-audio.wav` from Unity's main audio
+mixer. It crafts the skateboard through InventoryGui's craft button, selects the
+halfpipe in the Hammer menu, validates normal placement, and consumes both recipes'
+materials. The disposable terrain is leveled and cleared before capture.
+
+The scripted character has Skamtebord 25, Jump 100, 300 replenished stamina, god
+mode, and an ollie impulse of 8. Three separate run-ins start with 16, 16, and
+3 m/s of seeded flat-ground velocity. Subsequent movement, tricks, collision,
+landings, and scoring use the release mod. This is a staged demonstration with
+camera cuts, not an unassisted keyboard playthrough. The radio is temporarily
+disabled so the capture contains game audio rather than the developer's MP3s.
+Temporary mod configuration values are restored; the ordinary play profile is
+untouched. The harness checks crafting, placement, accepted tricks, landings,
+newly earned XP, and nonzero audio. `demo-telemetry.csv` and `demo-info.txt` retain
+the capture evidence.
+
+Encode a successful session with Python and `imageio-ffmpeg`:
+
+```powershell
+$session = (Get-Content .local/runtime/latest-qa-session.txt -Raw).Trim()
+python scripts/encode-build-demo.py $session media/09-build-halfpipe-demo.mp4
+```
+
+The encoder requires all 1,200 frames, a successful runtime result, and 40 seconds
+of stereo audio. It emits H.264/AAC MP4 with fast-start metadata at normal speed.
+To capture an existing release DLL without rebuilding it, build only the runtime
+smoke project first, then launch `scripts/qa.ps1 -Mode Demo -NoBuild`.
 
 In 0.3.0, Keyboard mode also tests sprint acceleration/stamina, the Humanoid tuck's planted feet and hip height, momentum on sprint release, hold/toggle run preferences, and one-time control migration. The game preference is restored in memory without saving. The same run renders both ramp shapes over a large floor from six viewpoints, including front/back at 60 metres, using the normal game camera's rendering path. Keeping the floor in this test catches the transparent-sprite fallback that isolated mesh rendering missed. Fixtures clone an opaque material from the game's Wood prefab instead of relying on Shader.Find to locate bundled shaders.
 

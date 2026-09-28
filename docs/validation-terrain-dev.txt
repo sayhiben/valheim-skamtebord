@@ -1,0 +1,63 @@
+Development DLL SHA256: D682AA205D1E336E782783D3B78E0106F27B1EEB1C822E053D478D3E2ECDE548
+
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS pushes over rough triangulated ground/uphill without dismounting, grade=0
+PASS changing ground facets do not steer the board off its route, grade=0
+PASS riding-frame angular jitter is reduced across rough facets, grade=0
+PASS rough ground avoids prolonged unsupported motion, grade=0
+PASS pushes over rough triangulated ground/uphill without dismounting, grade=25
+PASS changing ground facets do not steer the board off its route, grade=25
+PASS riding-frame angular jitter is reduced across rough facets, grade=25
+PASS rough ground avoids prolonged unsupported motion, grade=25
+PASS pushes over rough triangulated ground/uphill without dismounting, grade=35
+PASS changing ground facets do not steer the board off its route, grade=35
+PASS riding-frame angular jitter is reduced across rough facets, grade=35
+PASS rough ground avoids prolonged unsupported motion, grade=35
+PASS uphill assistance stays inactive without input, stamina, or enabled setting, trial=0
+PASS uphill assistance stays inactive without input, stamina, or enabled setting, trial=1
+PASS uphill assistance stays inactive without input, stamina, or enabled setting, trial=2
+PASS powered uphill start succeeds with stamina
+PASS torso actively counterleans toward vertical on a 30-degree slope
+PASS leg compensation keeps both animated feet on the board
+PASS moderate/glancing/low obstacle contact retains the ride, trial=0
+PASS forgiving collisions still block the rider instead of passing through obstacles
+PASS moderate/glancing/low obstacle contact retains the ride, trial=1
+PASS severe head-on impacts still bail
+PASS moderate/glancing/low obstacle contact retains the ride, trial=3
+PASS found a clear uneven uphill route on the generated map's actual Heightmap
+PASS pushes from rest uphill across unmodified generated terrain
+PASS native terrain facets do not cause uncontrolled steering drift
+PASS terrain tests never save or modify a personal world
+SUCCESS Rough ground, uphill pushing, obstacle tolerance, balance and unmodified terrain checks completed.
+
+Runtime measurements:
+ROUGH angle=0 distance=22.03 y=0.14 lateral=0.25 gap=0.260 peakSpeed=7.343 normalRms=6.816 filteredRms=1.961 riding=True
+ROUGH angle=25 distance=22.02 y=10.36 lateral=0.21 gap=0.280 peakSpeed=6.706 normalRms=5.521 filteredRms=2.177 riding=True
+ROUGH angle=35 distance=22.04 y=15.57 lateral=1.85 gap=0.180 peakSpeed=6.634 normalRms=6.352 filteredRms=3.897 riding=True
+ASSIST trial=0 distance=-6.865 riding=True
+ASSIST trial=1 distance=-6.865 riding=True
+ASSIST trial=2 distance=-6.399 riding=True
+ASSIST trial=3 distance=2.295 riding=True
+BALANCE tilt=30.00 torso=30.13->3.18 footError=0.0000
+OBSTACLE trial=0 riding=True position=(0.00, 0.00, 2.31) speed=0.00
+OBSTACLE trial=1 riding=True position=(15.05, 0.00, 2.31) speed=6.24
+OBSTACLE trial=2 riding=False position=(0.00, 0.00, 2.36) speed=0.00
+OBSTACLE trial=3 riding=True position=(0.00, 0.00, 4.62) speed=1.81
+NATIVE_ROUTE start=(12.00, 82.50, 4.00) direction=(0.00, 0.00, -1.00) heightVariation=9.03 seed=SkamtebordSmoke1 (unmodified terrain)
+NATIVE_MOUNT position=(12.02, 82.31, 4.40) velocity=(0.16, -1.03, 1.24) forward=(0.00, 0.00, -1.00) normal=(0.08, 0.77, 0.63)
+NATIVE_RESULT progress=26.01 deviation=1.07 heightGain=4.68 riding=True

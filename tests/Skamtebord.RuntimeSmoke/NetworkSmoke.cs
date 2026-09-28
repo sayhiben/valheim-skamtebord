@@ -115,6 +115,7 @@ internal static class NetworkSmoke
         var body = player.GetComponent<Rigidbody>();
         body.position = position; body.rotation = Quaternion.Euler(0,yaw,0);
         player.transform.SetPositionAndRotation(position,body.rotation); player.ForceJump(Vector3.zero,false);
+        player.SetLookDir(Quaternion.Euler(0,yaw,0)*Vector3.forward);
         player.AddStamina(100f);
         Physics.SyncTransforms(); yield return new WaitForSeconds(.6f);
         Call(rider,"Toggle");
@@ -212,6 +213,50 @@ internal static class NetworkSmoke
         ZNetScene.instance.Destroy(pipe); zdo.Set(PhaseKey,13);
         ack = Ack(13); while(ack.MoveNext()) yield return ack.Current;
         check(true,"observer sees dismount, remount and halfpipe removal");
+        zdo.Set(PhaseKey,14);
+        float reverseDeadline=Time.realtimeSinceStartup+12;
+        while(!File.Exists(Path.Combine(Root,"observed-14.txt")) && Time.realtimeSinceStartup<reverseDeadline)
+        {
+            Call(rider,"CaptureControls",Vector3.back,false);
+            yield return new WaitForFixedUpdate();
+        }
+        Call(rider,"CaptureControls",Vector3.zero,false);
+        ack=Ack(14);while(ack.MoveNext())yield return ack.Current;
+        check(true,"observer sees backward translation with the pushing pose");
+        var airReset=Reset(player,rider,origin,0);while(airReset.MoveNext())yield return airReset.Current;
+        var settings=Get<object>(rider,"Settings");
+        var jump=(BepInEx.Configuration.ConfigEntry<float>)AccessTools.Field(settings.GetType(),"JumpSpeed").GetValue(settings);
+        float oldJump=jump.Value;
+        try
+        {
+            // A boosted QA ollie leaves time for the separate observer's network
+            // snapshots. Steering and pose replication use production code.
+            jump.Value=8;body.linearVelocity=Vector3.forward*4;zdo.Set(PhaseKey,15);
+            Call(rider,"CaptureControls",Vector3.right,true);
+            yield return new WaitForFixedUpdate();
+            float spinEnd=Time.time+.32f;
+            while(Time.time<spinEnd) {Call(rider,"CaptureControls",Vector3.right,false);yield return new WaitForFixedUpdate();}
+            Call(rider,"CaptureControls",Vector3.zero,false);
+            ack=Ack(15);while(ack.MoveNext())yield return ack.Current;
+            check(true,"observer sees a manually steered air half-turn while the rider is above the ground");
+        }
+        finally {jump.Value=oldJump;}
+        Vector3 slopeOrigin=platform.transform.position+new Vector3(0,1.3f,30);
+        var slope=SurfaceSmoke.Profile(slopeOrigin,new System.Collections.Generic.List<Vector2>
+            {new Vector2(-10,0),Vector2.zero,new Vector2(25,25*Mathf.Tan(30*Mathf.Deg2Rad))},false);
+        var slopeReset=Reset(player,rider,slopeOrigin+new Vector3(0,5*Mathf.Tan(30*Mathf.Deg2Rad)+.5f,5),0);
+        while(slopeReset.MoveNext())yield return slopeReset.Current;
+        var constraints=body.constraints;body.constraints=RigidbodyConstraints.FreezePosition;
+        try
+        {
+            yield return new WaitForSeconds(.6f);zdo.Set(PhaseKey,16);
+            ack=Ack(16);while(ack.MoveNext())yield return ack.Current;
+            check(true,"observer sees upright torso counterbalance on the owner's inclined board");
+            Call(rider,"Dismount",false);zdo.Set(PhaseKey,17);
+            ack=Ack(17);while(ack.MoveNext())yield return ack.Current;
+            check(true,"observer restores normal animation after counterbalanced slope dismount");
+        }
+        finally {body.constraints=constraints;UnityEngine.Object.Destroy(slope);}
         until = Time.realtimeSinceStartup + 20;
         while(ZNet.instance.GetPeers().Count>0 && Time.realtimeSinceStartup<until) yield return null;
         check(ZNet.instance.GetPeers().Count == 0,"observer disconnect is handled by the normal network lifecycle");
@@ -243,7 +288,7 @@ internal static class NetworkSmoke
         RuntimeAnimatorController expectedBase = null;
         float nextDiagnostic = 0;
         float until = Time.realtimeSinceStartup + 180;
-        while (phaseDone < 13 && Time.realtimeSinceStartup < until)
+        while (phaseDone < 17 && Time.realtimeSinceStartup < until)
         {
             yield return new WaitForEndOfFrame();
             var actor = Player.GetAllPlayers().FirstOrDefault(p=>p && p!=player && p.GetComponent<ZNetView>().GetZDO()?.GetBool(ActorKey)==true);
@@ -312,6 +357,24 @@ internal static class NetworkSmoke
             }
             if(phase==12) passed = riding;
             if(phase==13) passed = !UnityEngine.Object.FindObjectsByType<Piece>(FindObjectsSortMode.None).Any(p=>p.name.StartsWith("Skamtebord_Halfpipe"));
+            if(phase==14) passed = riding && actor.transform.position.z<firstPosition.z-1 && actor.transform.forward.z>.9f
+                && clips.Any(c=>c.clip.name=="SkatePush" && c.weight>.2f);
+            if(phase==15) passed = riding && actor.transform.position.y>251 && actor.transform.forward.z<-.7f && actor.transform.up.y>.9f;
+            if(phase==16)
+            {
+                var spine=animator.GetBoneTransform(HumanBodyBones.Spine);
+                var neck=animator.GetBoneTransform(HumanBodyBones.Neck);
+                float slopeAngle=Vector3.Angle(actor.transform.up,Vector3.up),torsoAngle=Vector3.Angle(neck.position-spine.position,Vector3.up);
+                passed=riding && zdo.GetBool("skamtebord.grounded") && slopeAngle>25 && slopeAngle<35 && torsoAngle<12;
+                if(passed)log($"REMOTE_BALANCE boardTilt={slopeAngle:F2} torsoTilt={torsoAngle:F2}");
+            }
+            if(phase==17)
+            {
+                var balance=AccessTools.Field(rider.GetType(),"balance").GetValue(rider);
+                passed=!riding && Vector3.Angle(actor.transform.up,Vector3.up)<1
+                    && !(bool)AccessTools.Field(balance.GetType(),"applied").GetValue(balance)
+                    && animator.runtimeAnimatorController==expectedBase;
+            }
             if (!passed) continue;
             check(true,$"non-owner client verifies replicated phase {phase}, pos={actor.transform.position}, up={actor.transform.up}");
             ScreenCapture.CaptureScreenshot(Path.Combine(Root,$"observer-phase-{phase:D2}.png"));
@@ -321,10 +384,11 @@ internal static class NetworkSmoke
                 var skateAnimator=AccessTools.Field(rider.GetType(),"skateAnimator").GetValue(rider);
                 expectedBase=(RuntimeAnimatorController)AccessTools.Field(skateAnimator.GetType(),"original").GetValue(skateAnimator);
             }
+            if(phase==13)firstPosition=actor.transform.position;
             File.WriteAllText(Path.Combine(Root,"observed-"+phase+".txt"),"Verified from this client's replicated objects.");
             phaseDone=phase;
         }
-        check(phaseDone==13,"observer completes every replicated behavior and removal check");
+        check(phaseDone==17,"observer completes every replicated behavior, reverse, air steering, balance and removal check");
         var radioType = AccessTools.TypeByName("Skamtebord.Radio.SkateRadio");
         var radio = UnityEngine.Object.FindFirstObjectByType(radioType);
         check(radio && !((AudioSource)AccessTools.Field(radioType,"_source").GetValue(radio)).isPlaying,"remote skating never starts this client's personal radio");

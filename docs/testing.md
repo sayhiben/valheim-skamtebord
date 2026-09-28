@@ -1,5 +1,116 @@
 # Verification
 
+## 0.5.0 release verification — 2026-09-28 Pacific
+
+The versioned 0.5.0 DLL passed **43 terrain checks** and **45 host / 36 observer
+checks** in two separate Valheim processes. The release build also passed all
+**21 core checks**. Only assembly/plugin version metadata changed from the
+fully tested terrain development build below; its broader physics, handling,
+keyboard and animation regression results still describe this implementation.
+
+Release DLL SHA256:
+`95293E9EE805F51778B072360B0F9D8AFAB7C1E4EFBA775BD1038D5E8FEEF446`.
+The packaged DLL matches that tested binary. The ZIP's manifest is 0.5.0 with
+the pinned BepInEx/Jotunn dependencies. Packaging checks confirm one plugin DLL
+and no personal music, music archives, dependency/game DLLs, or QA harness.
+The release's adjacent `.sha256` file records the complete ZIP checksum.
+
+Records: [terrain](validation-terrain-0.5.0.txt),
+[host](validation-network-host-0.5.0.txt), [observer](validation-network-client-0.5.0.txt).
+The matching release DLL is installed in the local **Skamtebord Dev** profile;
+the prior DLL/configuration are backed up under `.local/backups/`. The existing
+profile configuration and personal music are preserved.
+
+## Terrain development validation — 2026-09-28 Pacific
+
+Tested in Valheim 1.0.16 / Unity 6000.0.75. **43 terrain checks passed** using
+real contacts and the production rider. On rough triangulated 0°, 25° and 35°
+slopes, forward pushing covered 22 metres without dismounting. The filtered
+riding-frame angular change was 39–71% lower than the contact-normal change
+(RMS), with lateral drift below 1.9 m. This measures orientation smoothing;
+physical bumps and genuine takeoffs remain possible.
+
+On a 35° incline, a powered start gained 2.30 m along the slope's horizontal
+axis in 1.2 seconds. Without input, without stamina, or with assistance disabled,
+the rider instead rolled downhill. A rendered 30° incline comparison reduced
+torso tilt from 30.13° to 3.18° while preserving both animated foot positions
+within the 4.5 cm acceptance tolerance (measured error rounded to 0.0000 m).
+An 8 m/s wall impact stopped the rider while retaining the board; a glancing
+14 m/s hit and a 30 cm obstacle also retained it. A direct 14 m/s crash bailed.
+
+The native-terrain run used an untouched generated Heightmap on seed
+`SkamtebordSmoke1`, with vegetation present. It selected a clear uphill route,
+mounted, recovered a small natural backward slip, then pushed 26.01 m with
+4.68 m of elevation gain and maximum sideways deviation of 1.07 m. There was
+no velocity seed or terrain flattening on that run. Stamina was replenished
+and controls were injected into the rider adapter. This is one selected route,
+not coverage of every biome, rock arrangement, or subjective riding condition.
+
+Regression suites also passed: **35 surface**, **38 carving**, **47 handling**,
+**52 ramp**, **87 keyboard**, and **21 core** checks. They cover vertical seams,
+natural crest release, banked corners in both directions, existing push caps
+and faster terrain momentum, fakie transfers, air turns, actual keyboard input,
+push animation, and normal movement after dismount.
+
+Two separate clients also passed **45 host / 36 observer** checks. The non-owner
+observed a surface-aligned board with an upright torso on a 30° incline, then
+normal animation after dismount. Movement, push/tuck, reverse, air steering,
+all five tricks, halfpipe poses and removal also passed. This uses actual
+ZNet/ZDO replication over loopback TCP; internet latency and Steam/PlayFab
+transport remain outside this test.
+
+Records: [terrain and measurements](validation-terrain-dev.txt),
+[surfaces](validation-surfaces-terrain-dev.txt), [carving](validation-carving-terrain-dev.txt),
+[handling](validation-handling-terrain-dev.txt), [ramps](validation-ramps-terrain-dev.txt),
+[keyboard](validation-keyboard-terrain-dev.txt), [host](validation-network-host-terrain-dev.txt),
+[observer](validation-network-client-terrain-dev.txt).
+Reproduce with `scripts/qa.ps1 -Mode Terrain`, and the corresponding named
+regression modes. The terrain session also writes pose screenshots, native route
+frames and CSV traces under the isolated save directory.
+
+Tested development DLL SHA256:
+`D682AA205D1E336E782783D3B78E0106F27B1EEB1C822E053D478D3E2ECDE548`.
+That development DLL was installed before the 0.5.0 version bump. Its predecessor
+and configuration are backed up in `.local/backups/terrain-20260928-131108/`.
+
+## Handling development validation — 2026-09-27 Pacific
+
+Tested on Valheim 1.0.16 / Unity 6000.0.75 with the actual owner physics and
+colliders. **47 handling checks passed**: forward and backward braking transition
+into a 3 m/s reverse push; forward/sprint inputs sustain fakie rolling at the
+existing 9/14 m/s limits. Ground turns exceed 75° from rest and 48° at sprint speed
+in 0.4 seconds. Left and right air turns reach 145–180° in 0.3 seconds, retain
+their orientation on release, and leave horizontal flight momentum unchanged.
+The old default steering setting migrates once; custom values are preserved.
+
+Both a backward lip landing and a deliberate air half-turn cross the flat and
+climb above 3.5 m on the opposite 4 m transition with sprint held. These runs seed
+16 m/s once on the initial flat approach; subsequent movement uses ordinary
+input, gravity and collisions. Forward and fakie ollies at the same lip both
+add a predominantly vertical impulse to the existing momentum. This is scripted
+runtime coverage, not a claim that subjective handling needs no further tuning.
+
+**38 carving regression checks**, **52 ramp checks**, and **87 normal-keyboard checks** also passed.
+The keyboard suite now verifies S braking into reverse, releasing reverse, and
+the pushing animation while backing up, through Valheim's PlayerController.
+In **two separate clients**, 43 host and 34 observer checks passed, including
+backward translation with the pushing pose and a manually steered half-turn
+observed above the ground. That observer uses actual ZNet/ZDO replication over
+localhost TCP; internet latency and Steam/PlayFab transport are not covered.
+
+Records: [handling](validation-handling-dev.txt),
+[carving](validation-carving-handling-dev.txt),
+[ramps](validation-ramps-handling-dev.txt),
+[keyboard](validation-keyboard-handling-dev.txt),
+[host](validation-network-host-handling-dev.txt),
+[observer](validation-network-client-handling-dev.txt).
+Reproduce with `scripts/qa.ps1 -Mode Handling`, `-Mode Carving`, `-Mode Ramps`, `-Mode Keyboard`,
+and `scripts/qa-multiplayer.ps1`.
+Tested development DLL SHA256:
+`E064E3FE35131AEE0063DD2572256A5B9FD3E8E778CB43903F3465C580014975`.
+That DLL was installed in the local r2modman **Skamtebord Dev** profile at the time
+of this test; later development updates supersede it. Backups are under `.local/backups/`.
+
 ## 0.4.0 speed limits and banked corners — 2026-09-27 Pacific
 
 **38 live carving checks passed** on Valheim 1.0.16 / Unity 6000.0.75. Straight and continuously turning runs reach exactly **9.00 m/s pushing** and **14.00 m/s sprinting**, without a push-step overshoot. With sprint held above those limits, a two-second carve slows **20 → 19.35 m/s** and **32 → 31.35 m/s** from rolling resistance; turning neither adds speed nor discards the sideways component of momentum.

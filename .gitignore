@@ -6,6 +6,9 @@ dist/
 Environment.props
 *.user
 *.[mM][pP]3
+# Personal radio archives/playlists stay local; keep only the setup instructions.
+/radio-mp3s/*
+!/radio-mp3s/README.txt
 assets/SkamtebordAnimations/Library/
 assets/SkamtebordAnimations/Temp/
 assets/SkamtebordAnimations/Logs/

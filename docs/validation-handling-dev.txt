@@ -1,0 +1,48 @@
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS handling update migrates the old default and preserves custom steering 105
+PASS handling migration does not repeat after later customization 105
+PASS handling update migrates the old default and preserves custom steering 140
+PASS handling migration does not repeat after later customization 140
+PASS holding backward stops then backs up at a bounded speed from 0
+PASS releasing backward leaves reverse mode
+PASS holding backward stops then backs up at a bounded speed from 8
+PASS backward input first brakes an existing roll, including fakie 8
+PASS releasing backward leaves reverse mode
+PASS holding backward stops then backs up at a bounded speed from -8
+PASS backward input first brakes an existing roll, including fakie -8
+PASS releasing backward leaves reverse mode
+PASS forward input accelerates backward rolling up to its existing 9 m/s push cap
+PASS forward input accelerates backward rolling up to its existing 14 m/s push cap
+PASS responsive ground steering remains slower at sprint speed 0
+PASS responsive ground steering remains slower at sprint speed 14
+PASS air turn reaches almost 180 degrees in 0.3 seconds, direction 1
+PASS air turn does not alter horizontal flight momentum, direction 1
+PASS releasing air steering retains the chosen orientation, direction 1
+PASS air turn reaches almost 180 degrees in 0.3 seconds, direction -1
+PASS air turn does not alter horizontal flight momentum, direction -1
+PASS releasing air steering retains the chosen orientation, direction -1
+PASS lip ollie reaches the supported transition, stance=0
+PASS lip ollie adds a mostly vertical impulse to both forward and fakie momentum, stance=0
+PASS lip ollie reaches the supported transition, stance=180
+PASS lip ollie adds a mostly vertical impulse to both forward and fakie momentum, stance=180
+PASS holding sprint carries a lip landing across and up the opposite transition, air turn=False
+PASS halfpipe transfer supports both a deliberate half turn and backward riding, air turn=False
+PASS holding sprint carries a lip landing across and up the opposite transition, air turn=True
+PASS halfpipe transfer supports both a deliberate half turn and backward riding, air turn=True
+PASS handling tests retain save isolation
+SUCCESS Responsive air/ground steering, reverse and fakie halfpipe transfers completed.

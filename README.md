@@ -2,23 +2,25 @@
 
 A Valheim 1.0 skateboarding mod: craft a wooden board, push through the Meadows, race down hills, and land tricks to build your **Skamtebord** skill. Inspired by Tony Hawk's Pro Skater, shield surfing, Skate, and 1080°.
 
-Version **0.4.0**, built against **Valheim 1.0.16 / Unity 6000.0.75**, with **BepInExPack 5.4.2350** and **Jötunn 2.30.1**. Includes a wooden halfpipe, easier tap/hold tricks, terrain-driven momentum and banking, multiplayer rider poses, and original Humanoid pushing/coasting/tuck animations. See [verification status](docs/testing.md) for what has actually been tested.
+Version **0.5.0**, built against **Valheim 1.0.16 / Unity 6000.0.75**, with **BepInExPack 5.4.2350** and **Jötunn 2.30.1**. Includes a wooden halfpipe, easier tap/hold tricks, terrain-driven momentum and banking, multiplayer rider poses, and original Humanoid pushing/coasting/tuck animations. See [verification status](docs/testing.md) for what has actually been tested.
+
+Version 0.5.0 adds faster steering, reverse controls, smoother rough-terrain riding, upright torso balance and easier uphill pushing. See the [changelog](CHANGELOG.md).
 
 ## Install with r2modman (recommended)
 
-**[Download Skamtebord 0.4.0](https://github.com/sayhiben/valheim-skamtebord/releases/download/v0.4.0/Skamtebord-0.4.0.zip)** · [All releases](https://github.com/sayhiben/valheim-skamtebord/releases)
+**[Download Skamtebord 0.5.0](https://github.com/sayhiben/valheim-skamtebord/releases/download/v0.5.0/Skamtebord-0.5.0.zip)** · [All releases](https://github.com/sayhiben/valheim-skamtebord/releases)
 
 You only need the release ZIP to play; no .NET SDK, Blender, Unity editor, or source checkout is required. These steps were prepared for Windows and Steam Valheim 1.0.16.
 
 1. Close Valheim. Open **r2modman**, select **Valheim**, and create or select a profile.
 2. In **Online**, install **BepInExPack_Valheim** by **denikson** and **Jotunn** by **ValheimModding**. The tested versions are **5.4.2350** and **2.30.1** respectively; choose those in the download version selector. Install both explicitly: importing a local mod does not automatically install its dependencies.
-3. Download **Skamtebord-0.4.0.zip** from the link above. Keep it zipped. GitHub's **Source code** downloads do not contain the compiled mod.
-4. Open **Settings**, search for **local mod**, and choose **Import local mod** (called **Install local mod** in some versions). Select the ZIP and confirm the import. If asked, use author **sayhiben**, name **Skamtebord**, and version **0.4.0**.
+3. Download **Skamtebord-0.5.0.zip** from the link above. Keep it zipped. GitHub's **Source code** downloads do not contain the compiled mod.
+4. Open **Settings**, search for **local mod**, and choose **Import local mod** (called **Install local mod** in some versions). Select the ZIP and confirm the import. If asked, use author **sayhiben**, name **Skamtebord**, and version **0.5.0**.
 5. Check that all three mods are enabled, then click **Start modded**. Enter a world and craft **Skamtebord** from your inventory: **8 Wood, 4 Resin, 2 Leather scraps**. Press **B** to ride.
 
 For **manual installation, updating, finding the MP3 folder, and troubleshooting**, see the [installation guide](docs/install.md). Local releases are updated by downloading another GitHub release; r2modman does not fetch these GitHub updates automatically. The import flow follows [r2modman's local-mod guide](https://github.com/ebkr/r2modmanPlus/wiki/Installing-mods-locally) and [Thunderstore's dependency guidance](https://wiki.thunderstore.io/mods/mod-not-visible).
 
-Install **0.4.0 and its dependencies on every player and the server** for a world containing the board or halfpipe; 0.3.x peers are incompatible. Each player must import this GitHub ZIP separately because locally imported mods are not included in shared r2modman profile codes. Movement and XP follow Valheim's client-authoritative player model. Board poses, pushing, sprinting, grabs, turn lean and timed trick animations are synchronized; music stays local.
+Install **0.5.0 and its dependencies on every player and the server** for a world containing the board or halfpipe; 0.3.x/0.4.x peers are incompatible. Each player must import this GitHub ZIP separately because locally imported mods are not included in shared r2modman profile codes. Movement and XP follow Valheim's client-authoritative player model. Board poses, pushing, sprinting, grabs, turn lean and timed trick animations are synchronized; music stays local.
 
 ## First ride
 
@@ -31,8 +33,8 @@ Keep the board in your inventory. Press **B**, or use its hotbar slot, to mount 
 | B / board hotbar slot | Mount or dismount |
 | Forward / left-stick up | Push; uses a little stamina |
 | Sprint + forward (Shift+W by default) | Accelerate faster with a crouched tuck; honors Valheim's hold/toggle run setting |
-| Left, right / left stick | Steer relative to the board |
-| Backward / left-stick down | Brake |
+| Left, right / left stick | Steer relative to the board; faster spins while airborne |
+| Backward / left-stick down | Brake; keep holding after stopping to back up slowly, then steer to reorient |
 | Jump / gamepad jump | Ollie; costs 5 stamina |
 | Tap jump again in the air | Random unlocked shuvit, flip or spin; no second jump boost |
 | Hold jump in the air | Hold a grab; release to let go |
@@ -48,7 +50,15 @@ Movement, sprint and jump follow Valheim's bindings, including the easier tap/ho
 
 Pushing reaches approximately 9 m/s on level ground; sprinting reaches 14 m/s with a lower stance and greater stamina use. These limits apply to total speed along the surface, including while turning. Releasing sprint keeps accumulated momentum, and empty stamina stops the extra acceleration. Gravity can take you faster downhill. `Physics/MaximumSpeed` is a separate soft terrain limit, default 25 m/s; set it to `0` for unrestricted terrain momentum. It never slows airborne motion or overrides a higher pushing limit.
 
-Steering gets gentler as speed rises. Carving redirects momentum along the supporting surface without deleting sideways speed, so banked corners can carry you around a curve. Rider and board bank with the surface as its slope and direction change. Rolling resistance and braking still slow you down; steering alone cannot create speed. The board is a visual beneath the player, so small rocks and steps still use Valheim's character collider. Ordinary fall damage remains active.
+Ground steering is responsive at low speed and gets gentler as speed rises. Air steering has a separate default of 540°/second: a half turn takes about a third of a second, and releasing the input keeps the orientation you chose. Turning in the air does not change flight momentum. Adjust `Physics/TurnSpeed` and `AirTurnSpeed` independently; an update migrates the old default ground rate while preserving custom values.
+
+Ordinary terrain angles are smoothed across the board's footprint and over time, with heading kept steady across changing cross-slopes. Steep transitions respond faster so the board can still follow halfpipe walls. The rider counterleans toward vertical while the legs keep the animated feet in place; this balance fades near vertical and during flight. Tune `Physics/SurfaceResponse` (lower is smoother) and `Interface/BalanceStrength` if needed.
+
+Active uphill pushing compensates for most opposing gravity, making rough slopes easier to climb without raising the 9/14 m/s push limits. It still requires stamina and ground contact, and fades near vertical walls. `Physics/UphillAssistance = 0` disables this help. Mounting aligns with the standing slope, and small backward slips do not immediately turn a forward push into downhill propulsion.
+
+Carving redirects momentum along the supporting surface without deleting sideways speed, so banked corners can carry you around a curve. Rider and board bank with the surface as its slope and direction change. Rolling resistance and braking still slow you down; steering alone cannot create speed. Glancing impacts, low obstacles and moderate collisions keep you mounted; solids can still stop the board. A direct high-speed crash can bail at `Physics/CollisionBailSpeed` (12 m/s by default). The board uses Valheim's character collider, so larger rocks and steps may still need an ollie. Ordinary fall damage remains active.
+
+Backward landings and rollbacks can keep rolling **fakie**: forward/sprint input pushes in your current rolling direction rather than slowing you because the board's nose faces the other way. Holding backward first brakes either direction, then backs up at a gentle 3 m/s once stopped. Use left/right while backing up to reorient. Release backward to coast. `ReverseTopSpeed` and `ReverseAcceleration` tune this maneuver; they do not cap backward terrain momentum.
 
 Ramps and terrain crests redirect your current momentum into the air. Rider and board follow the surface together. Ollies add a surface-dependent impulse to existing velocity: upward on flat ground, following the rising transition toward vertical at a halfpipe lip. Jump near the lip for extra height. A 0.12-second grace window accepts a slightly late takeoff; further airborne presses perform tricks without stacking boosts. Pushing and braking act only while supported. See the [earlier ramp comparison](media/05-ramp-momentum.mp4).
 
@@ -64,7 +74,7 @@ Banked points become exactly that many lifetime Skamtebord XP. Progress is saved
 
 Repeating a trick in one combo halves its base award each time. A held grab scores once per press. Combos are capped at 32 tricks, a ×6 multiplier, and 10,000 points. Trick animations must finish before landing. Manual tricks, grinds, reverts, dedicated skeletal trick animations, and competitive leaderboards are future work.
 
-The rider plants the front foot and pushes with the rear foot while forward is held, including at the push speed limit, then returns to a balanced coasting stance. Original Humanoid clips retarget to Valheim's character; animation does not supply movement forces. The skating panel defaults to the middle-right, away from health, stamina, and the minimap. Adjust `Interface/HudPosition` (normalized X/Y), `HudScale`, or `ShowHud` in the configuration.
+The rider plants the front foot and pushes with the rear foot while pushing, including at the push speed limit and while backing up, then returns to a balanced coasting stance. Original Humanoid clips retarget to Valheim's character; animation does not supply movement forces. The skating panel defaults to the middle-right, away from health, stamina, and the minimap. Adjust `Interface/HudPosition` (normalized X/Y), `HudScale`, or `ShowHud` in the configuration.
 
 Optional athletics rewards are **off by default**. Enabling `Progression/AthleticsExperience` adds just 0.05 of a normal Jump-skill raise per bank, at most once every 30 seconds. Pushing and coasting award no Run XP.
 
@@ -86,7 +96,7 @@ To build from a source checkout on Windows, install a **.NET SDK 8 or newer** an
 .\scripts\build.ps1
 ```
 
-The script finds the Steam installation, downloads pinned build dependencies, runs the core checks, and writes `dist/Skamtebord-0.4.0.zip` plus its `.sha256` checksum. Override game detection with `-ValheimPath 'D:\SteamLibrary\steamapps\common\Valheim'`. The checked-in animation bundle is included automatically. See [script details](scripts/README.md) for source builds and the optional direct-to-game installer; that installer does not target r2modman profiles.
+The script finds the Steam installation, downloads pinned build dependencies, runs the core checks, and writes `dist/Skamtebord-0.5.0.zip` plus its `.sha256` checksum. Override game detection with `-ValheimPath 'D:\SteamLibrary\steamapps\common\Valheim'`. The checked-in animation bundle is included automatically. See [script details](scripts/README.md) for source builds and the optional direct-to-game installer; that installer does not target r2modman profiles.
 
 Start a ready-to-skate disposable QA session with `scripts/qa.ps1`: intros skipped, board in hotbar slot 1, all tricks unlocked, and automatically mounted. Run `scripts/qa.ps1 -Mode Flow` for halfpipe and easy-input checks, `-Mode Keyboard` for bindings/rendering, or `-Mode Physics` for movement. `scripts/qa-multiplayer.ps1` checks replication in two local game processes. The default fixture mode skips world-wide location generation; `-FullWorld` restores it and `-FreshProgression` starts at level zero. These shortcuts affect only the isolated developer harness. See [QA instructions](tests/Skamtebord.RuntimeSmoke/README.md).
 
@@ -95,6 +105,10 @@ Use `scripts/qa.ps1 -Ramps` for an interactive course: a 20° kicker straight ah
 `scripts/qa.ps1 -Mode Surfaces` checks ordinary meshes without halfpipe metadata: vertical transitions, collider seams, low-speed rollback, downhill acceleration, speed-dependent crest departure, and head-on wall impacts.
 
 `scripts/qa.ps1 -Mode Carving` checks straight/turning push caps, downhill speed beyond those caps, the optional terrain governor, fast airborne momentum, and banked corners in both directions.
+
+`scripts/qa.ps1 -Mode Handling` checks braking into reverse, fakie pushing, faster ground/air steering, retained air orientation and momentum, and halfpipe transfers with both backward and turned landings.
+
+`scripts/qa.ps1 -Mode Terrain` checks rough triangulated slopes, uphill assistance gates, torso/foot balance, obstacle tolerance, and a selected uphill route on untouched generated terrain. It writes pose screenshots, route frames and physics telemetry in the isolated QA save directory.
 
 `src/Skamtebord` contains the plugin, recipe, physics, presentation, and radio. `src/Skamtebord.Core` holds pure scoring/progression logic, compiled into the single plugin DLL. Run checks separately with:
 

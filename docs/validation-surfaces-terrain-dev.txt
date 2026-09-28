@@ -1,0 +1,38 @@
+Development DLL SHA256: D682AA205D1E336E782783D3B78E0106F27B1EEB1C822E053D478D3E2ECDE548
+
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS untagged transition (split=False) supports its vertical face
+PASS untagged transition (split=False) feeds supported verticals into game bookkeeping
+PASS untagged transition (split=False) stays supported through the curve and seams
+PASS untagged transition (split=False) leaves its lip using upward momentum
+PASS untagged transition (split=False) gains air without a false wall bail
+PASS untagged transition (split=True) supports its vertical face
+PASS untagged transition (split=True) feeds supported verticals into game bookkeeping
+PASS untagged transition (split=True) stays supported through the curve and seams
+PASS untagged transition (split=True) leaves its lip using upward momentum
+PASS untagged transition (split=True) gains air without a false wall bail
+PASS insufficient momentum stalls and rolls back naturally on an untagged transition
+PASS convex crest speed trial 0 releases contact naturally
+PASS convex crest speed trial 0 is ballistic after leaving support
+PASS convex crest speed trial 1 releases contact naturally
+PASS convex crest speed trial 1 is ballistic after leaving support
+PASS faster momentum leaves the convex crest earlier instead of being pulled onto the downslope
+PASS gravity gains substantial speed on an unpowered downhill run
+PASS a gentle downhill transition and its collider seams do not cause repeated false jumps
+PASS a head-on vertical wall still bails instead of becoming climbable ground
+SUCCESS General skating support, surface flow and natural takeoff checks completed.

@@ -1,0 +1,53 @@
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS roll-slow starts grounded and movable
+PASS roll-slow mounts on approach
+PASS roll-fast starts grounded and movable
+PASS roll-fast mounts on approach
+PASS jump-early starts grounded and movable
+PASS jump-early mounts on approach
+PASS jump-lip starts grounded and movable
+PASS jump-lip mounts on approach
+PASS jump-grace starts grounded and movable
+PASS jump-grace mounts on approach
+PASS jump-too-late starts grounded and movable
+PASS jump-too-late mounts on approach
+PASS jump-repeat starts grounded and movable
+PASS jump-repeat mounts on approach
+PASS terrain-crest starts grounded and movable
+PASS terrain-crest mounts on approach
+PASS roll-normal starts grounded and movable
+PASS roll-normal mounts on approach
+PASS steep-ramp starts grounded and movable
+PASS steep-ramp mounts on approach
+PASS air-push starts grounded and movable
+PASS air-push mounts on approach
+PASS more approach momentum gives more ramp air without jumping
+PASS roll-off preserves horizontal speed and ramp-generated lift
+PASS jump near the lip gains more height than jumping early
+PASS ollie adds upward impulse to existing ramp momentum
+PASS jump just beyond the lip uses the short grace window
+PASS late airborne jump cannot add an impulse
+PASS repeated airborne jump requests do not stack boosts
+PASS terrain-shaped crest launches from its collision surface
+PASS timed ramp ollie lands and keeps skating
+PASS timed ollie gets more air than rolling off at the same approach speed
+PASS steeper collision surface redirects more momentum upward
+PASS holding push in the air does not extend the flight
+PASS grace and expired-grace trials actually submit their jump requests
+PASS ramp test retains save isolation
+SUCCESS Real Unity ramp momentum and timed-jump checks completed; telemetry in D:\dev\valheim-skamtebord\.local\runtime\smoke-saves\skamtebord_smoke_20260928042539_2d13f8

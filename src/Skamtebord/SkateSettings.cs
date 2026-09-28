@@ -9,6 +9,8 @@ internal sealed class SkateSettings
     internal readonly ConfigEntry<KeyboardShortcut> Mount, Shuvit, Kickflip, Heelflip, Grab, Spin, RadioToggle, RadioNext;
     internal readonly ConfigEntry<float> PushAcceleration, PushTopSpeed, MaximumSpeed, TurnSpeed, BrakeStrength, JumpSpeed;
     internal readonly ConfigEntry<float> SprintAcceleration, SprintTopSpeed;
+    internal readonly ConfigEntry<float> AirTurnSpeed, ReverseAcceleration, ReverseTopSpeed;
+    internal readonly ConfigEntry<float> UphillAssistance, SurfaceResponse, CollisionBailSpeed, BalanceStrength;
     internal readonly ConfigEntry<bool> AthleticsExperience, ShowHud;
     internal readonly ConfigEntry<float> HudScale;
     internal readonly ConfigEntry<Vector2> HudPosition;
@@ -35,7 +37,20 @@ internal sealed class SkateSettings
         SprintAcceleration = Number("SprintAcceleration", 8f, 1f, 20f, "Acceleration while holding forward and Valheim's sprint input, m/s². Uses 6 stamina per second and a tucked stance.");
         SprintTopSpeed = Number("SprintTopSpeed", 14f, 9f, 25f, "Sprint skating top speed, m/s. Does not overwrite faster downhill momentum.");
         MaximumSpeed = Number("MaximumSpeed", 25f, 0f, 80f, "Optional soft terrain speed limit, m/s; 0 disables it. Only slows supported motion, never flight, and cannot be lower than either pushing limit. Existing custom limits are preserved.");
-        TurnSpeed = Number("TurnSpeed", 105f, 30f, 180f, "Steering degrees per second; decreases at speed.");
+        TurnSpeed = Number("TurnSpeed", 165f, 30f, 360f, "Ground steering degrees per second; decreases gently at speed. Air steering uses AirTurnSpeed.");
+        AirTurnSpeed = Number("AirTurnSpeed", 540f, 90f, 1080f, "Airborne turn degrees per second, independent of speed. 540 permits a half turn in one third of a second; turns do not add flight velocity.");
+        ReverseAcceleration = Number("ReverseAcceleration", 3f, 1f, 10f, "Backing-up acceleration, m/s². Hold backward to brake, then back up slowly and steer to reorient.");
+        ReverseTopSpeed = Number("ReverseTopSpeed", 3f, 1f, 6f, "Backing-up push limit, m/s. Does not limit unpowered backward rolling or downhill momentum.");
+        UphillAssistance = Number("UphillAssistance", .95f, 0f, 1f, "Fraction of opposing gravity compensated while actively pushing uphill. Uses stamina and the existing push speed budget; fades out on near-vertical faces.");
+        SurfaceResponse = Number("SurfaceResponse", 18f, 6f, 60f, "Response rate for smoothing ordinary ground angles. Lower is smoother. Steep transitions respond faster so wall rides and lips remain usable.");
+        CollisionBailSpeed = Number("CollisionBailSpeed", 12f, 6f, 25f, "Minimum head-on impact speed for an obstacle bail, m/s. Glancing hits and small low contacts keep skating; physical collisions still block movement.");
+        BalanceStrength = config.Bind("Interface", "BalanceStrength", 1f, new ConfigDescription("Counterbalance the torso on ordinary slopes while the legs keep feet aligned with the board. Fades out for vertical wall rides.", new AcceptableValueRange<float>(0f,1f)));
+        var handling = config.Bind("Internal", "HandlingVersion", 0, "One-time update of the old default steering rate; custom steering values are preserved.");
+        if (handling.Value < 1)
+        {
+            if (Mathf.Approximately(TurnSpeed.Value, 105f)) TurnSpeed.Value = 165f;
+            handling.Value = 1;
+        }
         BrakeStrength = Number("BrakeStrength", 10f, 2f, 25f, "Braking deceleration, m/s².");
         JumpSpeed = Number("JumpSpeed", 5.2f, 3f, 8f, "Ollie upward impulse added to current velocity, m/s. Time it near a ramp lip for more air; 0.12 seconds of takeoff grace.");
         AthleticsExperience = config.Bind("Progression", "AthleticsExperience", false, "Optional small Jump skill reward: 0.05 per bank, at most once every 30 seconds. Vanilla ollie Jump XP is suppressed.");
