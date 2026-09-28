@@ -1,0 +1,90 @@
+Development DLL SHA256: D682AA205D1E336E782783D3B78E0106F27B1EEB1C822E053D478D3E2ECDE548
+
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS QA keyboard remains available without window focus
+PASS Shuvit legacy default migrates to J
+PASS Kickflip legacy default migrates to K
+PASS Heelflip legacy default migrates to L
+PASS Grab legacy default migrates to U
+PASS ThreeSixty legacy default migrates to I
+PASS migration preserves a custom modified binding
+PASS migration runs only once and preserves later rebindings
+PASS default trick cluster has no Valheim 1.0.16 action collisions
+PASS normal PlayerController remains enabled
+PASS kicker-view-0 visible at 16m (12250 pixels)
+PASS kicker-view-1 visible at 16m (11150 pixels)
+PASS kicker-view-2 visible at 20m (3472 pixels)
+PASS kicker-view-3 visible at 20m (3472 pixels)
+PASS kicker-view-4 visible at 60m (726 pixels)
+PASS kicker-view-5 visible at 60m (666 pixels)
+PASS crest-view-0 visible at 16m (16838 pixels)
+PASS crest-view-1 visible at 16m (16304 pixels)
+PASS crest-view-2 visible at 20m (6016 pixels)
+PASS crest-view-3 visible at 20m (6016 pixels)
+PASS crest-view-4 visible at 60m (822 pixels)
+PASS crest-view-5 visible at 60m (810 pixels)
+PASS B key mounts through the normal keyboard binding
+PASS rider uses an AnimatorOverrideController
+PASS mount preserves Valheim's root-motion setting and animator state
+PASS graphical QA renders a non-black frame before capture
+PASS W key pushes: 0.00->7.78 m/s
+PASS Humanoid SkatePush clip plays while pushing
+PASS push animation adds no root travel (0.00000m maximum per frame)
+PASS front support foot stays planted through the push cycle
+PASS pushing foot visibly moves through the cycle
+PASS releasing W returns to coasting
+PASS D key steers through PlayerController
+PASS synthetic jump tap stays below the grab threshold (0.052s)
+PASS Space key launches an ollie
+PASS keyboard ollie lands and retains the ride
+PASS keyboard ollie banks 100 newly earned Skamtebord XP (actual=100, status=+100 Skamtebord XP)
+PASS S key brakes the original rolling direction
+PASS holding S after stopping backs up through the normal PlayerController, capped at 3 m/s
+PASS backing up displays the synchronized push animation
+PASS releasing S exits reverse control
+PASS ordinary pushing reaches its 9 m/s cap (8.99)
+PASS Shift+W sprints through PlayerController (14.00 m/s)
+PASS sprinting consumes stamina
+PASS Humanoid SkateTuck clip plays during sprint
+PASS sprint visibly crouches the rider (hips 0.95->0.68m)
+PASS both feet remain on the board during tuck
+PASS tuck introduces no animation root travel
+PASS releasing sprint preserves accumulated speed (14.00->13.92, sprint=False, run=False)
+PASS releasing sprint restores the normal skating stance
+PASS empty stamina disables sprint
+PASS Valheim toggle-run preference keeps sprint active after releasing Shift
+PASS second Shift press ends toggle-mode sprint
+PASS E remains available to Valheim Use while mounted
+PASS Tab opens the ordinary inventory
+PASS inventory blocks mount, push, sprint and trick keyboard input
+PASS Tab closes the ordinary inventory
+PASS F5 opens the ordinary console
+PASS F5 closes the ordinary console
+PASS dismount restores the original animator controller
+PASS ordinary walking works after dismount
+PASS B remounts after normal walking
+PASS J triggers Shuvit through the real trick binding
+PASS K triggers Kickflip through the real trick binding
+PASS L triggers Heelflip through the real trick binding
+PASS U triggers Grab through the real trick binding
+PASS I triggers ThreeSixty through the real trick binding
+PASS HUD stays in clear screen bounds at 1280x720
+PASS HUD stays in clear screen bounds at 2560x1440
+PASS second dismount leaves the character immediately movable
+PASS keyboard test retains save isolation
+SUCCESS Keyboard events exercised normal Valheim input, animation, HUD and physics; evidence in D:\dev\valheim-skamtebord\.local\runtime\smoke-saves\skamtebord_smoke_20260928201235_06f8c5

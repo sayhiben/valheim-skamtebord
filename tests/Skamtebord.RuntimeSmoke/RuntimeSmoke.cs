@@ -228,6 +228,9 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
         bool flowTest = Environment.GetCommandLineArgs().Contains("-skamtebord-flow-test");
         bool surfaceTest = Environment.GetCommandLineArgs().Contains("-skamtebord-surface-test");
         bool carvingTest = Environment.GetCommandLineArgs().Contains("-skamtebord-carving-test");
+        bool handlingTest = Environment.GetCommandLineArgs().Contains("-skamtebord-handling-test");
+        bool terrainTest = Environment.GetCommandLineArgs().Contains("-skamtebord-terrain-test");
+        bool demoCapture = Environment.GetCommandLineArgs().Contains("-skamtebord-demo");
         if (rampTest && interactive) RampSmoke.CreatePlayCourse(origin);
         if (interactive)
         {
@@ -251,7 +254,7 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
         File.WriteAllText(Path.Combine(saveRoot, "qa-ready.json"), JsonUtility.ToJson(new ReadyRecord
         {
             processId = System.Diagnostics.Process.GetCurrentProcess().Id, readySeconds = Time.realtimeSinceStartup,
-            mode = interactive ? "play" : NetworkSmoke.Active ? "network-"+NetworkSmoke.Role : carvingTest ? "carving" : surfaceTest ? "surfaces" : flowTest ? "flow" : keyboardTest ? "keyboard" : rampTest ? "ramps" : radioTest ? "radio" : "physics", saveRoot = saveRoot,
+            mode = interactive ? "play" : demoCapture ? "demo" : NetworkSmoke.Active ? "network-"+NetworkSmoke.Role : terrainTest ? "terrain" : handlingTest ? "handling" : carvingTest ? "carving" : surfaceTest ? "surfaces" : flowTest ? "flow" : keyboardTest ? "keyboard" : rampTest ? "ramps" : radioTest ? "radio" : "physics", saveRoot = saveRoot,
             initialPoints = initialPoints, level = Get<int>(Get<object>(rider, "Progression"), "Level"), fastWorld = QaBootstrap.FastWorld
         }, true));
         File.WriteAllText(Path.Combine(Paths.GameRootPath, "latest-qa-session.txt"), saveRoot);
@@ -260,6 +263,13 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
             player.Message(MessageHud.MessageType.Center, "QA ready: slot 1 / B board • " + (QaBootstrap.FreshProgression ? "fresh progression" : "all tricks unlocked") + " • no saves");
             File.WriteAllLines(Path.Combine(saveRoot, "smoke-result.txt"), checks.Concat(new[] { "READY Interactive QA; close the game when finished." }));
             Log("READY", $"Interactive QA ready in {Time.realtimeSinceStartup:F2}s. Saves remain disabled.");
+            yield break;
+        }
+        if (demoCapture)
+        {
+            var demo = BuildRideDemo.Run(player,rider,platform,saveRoot,Check,message=>Log("DEMO",message));
+            while(demo.MoveNext()) yield return demo.Current;
+            Finish(true,"Build-and-ride demo captured with synchronized game audio: " + saveRoot);
             yield break;
         }
         if (NetworkSmoke.Active)
@@ -296,6 +306,20 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
             var surfaces = SurfaceSmoke.Run(player,rider,platform,saveRoot,Check,message=>Log("SURFACES",message));
             while(surfaces.MoveNext()) yield return surfaces.Current;
             Finish(true,"General skating support, surface flow and natural takeoff checks completed.");
+            yield break;
+        }
+        if (handlingTest)
+        {
+            var handling = HandlingSmoke.Run(player,rider,platform,saveRoot,Check,message=>Log("HANDLING",message));
+            while(handling.MoveNext()) yield return handling.Current;
+            Finish(true,"Responsive air/ground steering, reverse and fakie halfpipe transfers completed.");
+            yield break;
+        }
+        if (terrainTest)
+        {
+            var terrain = TerrainSmoke.Run(player,rider,platform,saveRoot,Check,message=>Log("TERRAIN",message));
+            while(terrain.MoveNext()) yield return terrain.Current;
+            Finish(true,"Rough ground, uphill pushing, obstacle tolerance, balance and unmodified terrain checks completed.");
             yield break;
         }
         if (radioTest)

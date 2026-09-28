@@ -1,0 +1,39 @@
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS push straight reaches its 9 m/s limit without overshooting
+PASS push turning reaches its 9 m/s limit without overshooting
+PASS sprint straight reaches its 14 m/s limit without overshooting
+PASS sprint turning reaches its 14 m/s limit without overshooting
+PASS turning above both push caps adds no speed even with sprint held at 20 m/s
+PASS unpowered carve retains momentum apart from rolling resistance at 20 m/s
+PASS turning above both push caps adds no speed even with sprint held at 32 m/s
+PASS unpowered carve retains momentum apart from rolling resistance at 32 m/s
+PASS unpowered descent exceeds both push limits with terrain governor 25
+PASS unpowered descent exceeds both push limits with terrain governor 0
+PASS optional terrain governor controls supported speed and 0 disables it
+PASS terrain governor does not drag an airborne board above 25 m/s
+PASS high-speed flight still follows ordinary gravity
+PASS coasts around more than a 90-degree rounded corner, direction 1
+PASS rider banks with changing surface normals through the corner, direction 1
+PASS rounded corner maintains continuous skating support, direction 1
+PASS banked steering preserves terrain momentum without creating energy, direction 1
+PASS coasts around more than a 90-degree rounded corner, direction -1
+PASS rider banks with changing surface normals through the corner, direction -1
+PASS rounded corner maintains continuous skating support, direction -1
+PASS banked steering preserves terrain momentum without creating energy, direction -1
+PASS carving tests retain save isolation
+SUCCESS Push limits, terrain momentum and banked corner checks completed.

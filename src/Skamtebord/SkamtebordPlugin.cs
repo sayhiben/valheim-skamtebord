@@ -15,7 +15,7 @@ namespace Skamtebord;
 public sealed class SkamtebordPlugin : BaseUnityPlugin
 {
     public const string Guid = "com.skamtebord.valheim";
-    public const string ModVersion = "0.4.0";
+    public const string ModVersion = "0.5.0";
     internal static SkamtebordPlugin Instance;
     internal SkateSettings Settings;
     internal SkateRadio Radio;

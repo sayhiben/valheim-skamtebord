@@ -45,8 +45,8 @@ internal sealed class SkateHud : MonoBehaviour
                 : "Find a line. Keep rolling.";
             GUI.Label(new Rect(14, 43, 322, 40), combo, text);
             GUI.Label(new Rect(14, 83, 322, 25), $"Level {rider.Progression.Level}  ·  {rider.Progression.LifetimePoints:N0} XP", text);
-            string status = rider.Sprinting ? "Tucked sprint · 6 stamina / second"
-                : Time.time < rider.StatusUntil ? rider.Status : "Land, then roll for 2 seconds to bank.";
+            string status = rider.Backing ? "Backing up · steer to reorient" : rider.Sprinting ? "Tucked sprint · 6 stamina / second"
+                : Time.time < rider.StatusUntil ? rider.Status : "Hold backward: brake, then back up.";
             GUI.Label(new Rect(14, 110, 322, 36), status, small);
             GUI.Label(new Rect(14, 148, 322, 22), $"{ZInput.instance.GetBoundKeyString("Run")}: sprint  ·  Jump: ollie  ·  {s.Mount.Value}: off", small);
             GUI.Label(new Rect(14, 173, 322, 22), "Air: tap Jump for a trick · hold Jump to grab", small);

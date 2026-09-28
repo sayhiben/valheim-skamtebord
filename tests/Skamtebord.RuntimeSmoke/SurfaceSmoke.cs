@@ -47,12 +47,13 @@ internal static class SurfaceSmoke
         return points;
     }
 
-    internal static IEnumerator Reset(Player player,Component rider,Vector3 position)
+    internal static IEnumerator Reset(Player player,Component rider,Vector3 position,float yaw=0)
     {
         if(Get<bool>(rider,"Riding")) Call(rider,"Dismount",false);
         var body=player.GetComponent<Rigidbody>();
-        body.position=position; body.rotation=Quaternion.identity;
+        body.position=position; body.rotation=Quaternion.Euler(0,yaw,0);
         player.transform.SetPositionAndRotation(position,body.rotation); player.ForceJump(Vector3.zero,false);
+        player.SetLookDir(Quaternion.Euler(0,yaw,0)*Vector3.forward);
         Physics.SyncTransforms(); yield return new WaitForSeconds(.7f);
         player.AddStamina(100); Call(rider,"Toggle");
         if(!Get<bool>(rider,"Riding")) throw new InvalidOperationException("Surface trial could not mount on its flat approach.");

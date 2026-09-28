@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('Play', 'Keyboard', 'Physics', 'Ramps', 'Radio', 'Flow', 'Surfaces', 'Carving')][string] $Mode = 'Play',
+    [ValidateSet('Play', 'Keyboard', 'Physics', 'Ramps', 'Radio', 'Flow', 'Surfaces', 'Carving', 'Handling', 'Terrain', 'Demo')][string] $Mode = 'Play',
     [string] $ValheimPath,
     [string] $RadioDirectory,
     [switch] $NoBuild,
@@ -68,7 +68,7 @@ if ($StageOnly) { Write-Host "QA staged at $runtime"; return }
 $log = Join-Path $root ('.local/qa-' + $Mode.ToLowerInvariant() + '-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.log')
 $arguments = @('-skamtebord-smoke', '-console', '-logFile', ('"' + $log + '"'))
 $arguments += @('-skamtebord-radio-directory', ('"' + $RadioDirectory + '"'))
-if ($Mode -in @('Physics','Surfaces','Carving') -or ($Mode -eq 'Ramps' -and !$Record)) { $arguments += @('-batchmode', '-nographics') }
+if ($Mode -in @('Physics','Surfaces','Carving','Handling') -or ($Mode -eq 'Ramps' -and !$Record)) { $arguments += @('-batchmode', '-nographics') }
 else { $arguments += @('-force-d3d11', '-screen-fullscreen', '0', '-screen-width', '1920', '-screen-height', '1080') }
 if ($Mode -eq 'Play') { $arguments += '-skamtebord-qa' }
 if ($Mode -eq 'Keyboard') { $arguments += '-skamtebord-keyboard-test' }
@@ -76,6 +76,9 @@ if ($Mode -eq 'Radio') { $arguments += '-skamtebord-radio-test' }
 if ($Mode -eq 'Flow') { $arguments += '-skamtebord-flow-test' }
 if ($Mode -eq 'Surfaces') { $arguments += '-skamtebord-surface-test' }
 if ($Mode -eq 'Carving') { $arguments += '-skamtebord-carving-test' }
+if ($Mode -eq 'Handling') { $arguments += '-skamtebord-handling-test' }
+if ($Mode -eq 'Terrain') { $arguments += '-skamtebord-terrain-test' }
+if ($Mode -eq 'Demo') { $arguments += '-skamtebord-demo' }
 if ($Mode -eq 'Ramps' -or $Ramps) { $arguments += '-skamtebord-ramps' }
 if ($FreshProgression) { $arguments += '-skamtebord-fresh-progression' }
 if ($FullWorld) { $arguments += '-skamtebord-full-world' }

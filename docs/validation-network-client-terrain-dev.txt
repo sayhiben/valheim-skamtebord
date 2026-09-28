@@ -1,0 +1,39 @@
+Development DLL SHA256: D682AA205D1E336E782783D3B78E0106F27B1EEB1C822E053D478D3E2ECDE548
+
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS non-owner client verifies replicated phase 0, pos=(0.00, 250.16, 0.00), up=(0.00, 1.00, 0.00)
+PASS non-owner client verifies replicated phase 1, pos=(0.00, 250.00, 1.02), up=(0.00, 1.00, 0.00)
+PASS non-owner client verifies replicated phase 2, pos=(0.00, 250.00, 11.15), up=(0.00, 1.00, 0.00)
+PASS non-owner client verifies replicated phase 3, pos=(0.34, 250.00, 29.59), up=(0.00, 1.00, 0.00)
+PASS non-owner client verifies replicated phase 4, pos=(18.00, 255.09, 25.14), up=(0.00, 0.09, -1.00)
+PASS non-owner client verifies replicated phase 5, pos=(18.00, 255.06, 25.13), up=(0.00, 0.05, -1.00)
+PASS non-owner client verifies replicated phase 6, pos=(18.00, 255.09, 25.12), up=(0.00, 0.05, -1.00)
+PASS non-owner client verifies replicated phase 7, pos=(18.00, 255.00, 25.12), up=(0.00, 0.09, -1.00)
+PASS non-owner client verifies replicated phase 8, pos=(18.00, 255.16, 25.11), up=(0.00, 0.04, -1.00)
+PASS non-owner client verifies replicated phase 9, pos=(18.00, 256.31, 25.18), up=(0.00, 0.08, -1.00)
+PASS non-owner client verifies replicated phase 10, pos=(18.00, 254.73, 25.18), up=(0.00, 0.15, -0.99)
+PASS non-owner client verifies replicated phase 11, pos=(18.00, 255.15, 25.06), up=(0.00, 1.00, -0.05)
+PASS non-owner client verifies replicated phase 12, pos=(0.00, 250.00, -20.00), up=(0.00, 1.00, 0.00)
+PASS non-owner client verifies replicated phase 13, pos=(0.00, 250.00, -20.00), up=(0.00, 1.00, 0.00)
+PASS non-owner client verifies replicated phase 14, pos=(0.00, 250.00, -21.02), up=(0.00, 1.00, 0.00)
+PASS non-owner client verifies replicated phase 15, pos=(0.02, 251.63, -18.54), up=(0.00, 1.00, 0.00)
+PASS non-owner client verifies replicated phase 16, pos=(0.00, 253.33, 35.37), up=(0.00, 0.87, -0.50)
+PASS non-owner client verifies replicated phase 17, pos=(0.00, 253.34, 35.36), up=(0.00, 1.00, 0.00)
+PASS observer completes every replicated behavior, reverse, air steering, balance and removal check
+PASS remote skating never starts this client's personal radio
+SUCCESS Two-process ZNet replication checks completed for client

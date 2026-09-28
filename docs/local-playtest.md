@@ -2,9 +2,9 @@
 
 Prepared on 2026-09-26 using the installed Steam release, **Valheim 1.0.16** (Steam build 25527674).
 
-## Current development build — 2026-09-27
+## Current installed release — 2026-09-28
 
-The installed DLL in **Skamtebord Dev** is now the **0.4.0 development build**, including total-speed push limits, momentum-preserving carving and banking, shared skating support for terrain and vertical transitions, tap/hold beginner tricks, the wooden halfpipe, continuous pushing, and replicated multiplayer visuals. SHA-256: `3648A2BD2BC4EBBF70A7A618336682D0779DEF72E20C40155C46D46995DD5EB3`. Previous DLLs are backed up under `.local/profile-backups/`. Configuration and radio files are preserved. The isolated validation results are in [testing.md](testing.md).
+The installed DLL in **Skamtebord Dev** is now **0.5.0**, adding smoother rough-terrain riding, upright torso balance, uphill assistance, more forgiving collisions, faster turns, reverse controls and fakie pushing. SHA-256: `95293E9EE805F51778B072360B0F9D8AFAB7C1E4EFBA775BD1038D5E8FEEF446`. Previous DLLs and configuration are backed up under `.local/backups/` (older backups also use `.local/profile-backups/`). Configuration and radio files are preserved. The release DLL passed terrain and two-process multiplayer checks; full results and the preceding gameplay regression suites are in [testing.md](testing.md). The profile keeps one plugin DLL and no QA harness; its manager label may retain an older version after direct DLL replacement.
 
 For an immediate ramp session, run `scripts/qa.ps1 -Ramps`: the player starts mounted, with all tricks unlocked, in the disposable three-lane course. The halfpipe is farther right; a nearby workbench, Hammer and 80 Wood let you try building another. The ordinary r2modman profile still uses normal progression and saves. The observations below describe the earlier 0.1.0 hands-on session.
 

@@ -17,6 +17,7 @@ internal sealed class BoardRider : MonoBehaviour
     private const string TrickTimeKey = "skamtebord.trickTime";
     private const string GrabKey = "skamtebord.grabHeld";
     private const string LeanKey = "skamtebord.lean";
+    private const string GroundedKey = "skamtebord.grounded";
     internal const string SurfaceRotationKey = "skamtebord.surfaceRotationUsed";
     private const string ExperienceKey = "com.skamtebord.valheim.xp.v1";
     private static readonly System.Reflection.MethodInfo GetSkill = AccessTools.Method(typeof(Skills), "GetSkill");
@@ -36,8 +37,11 @@ internal sealed class BoardRider : MonoBehaviour
     private ZNetView view;
     private ZSyncAnimation animationSync;
     private SkateAnimator skateAnimator;
+    private SkateBalance balance;
     private bool publishedPushing;
     private bool sprintRequested, publishedSprinting;
+    private bool backing, airSteered;
+    private float rollingDirection = 1f;
     private GameObject board;
     private Transform visual;
     private Quaternion originalVisualRotation;
@@ -71,7 +75,8 @@ internal sealed class BoardRider : MonoBehaviour
     internal bool Riding { get; private set; }
     internal bool Grounded { get; private set; }
     internal bool Sprinting { get; private set; }
-    internal bool Pushing => Riding && Grounded && surfaceNormal.y > .3f && controls.z > .1f && !Sprinting && player.HaveStamina(.1f);
+    internal bool Backing => Riding && Grounded && backing;
+    internal bool Pushing => Riding && Grounded && surfaceNormal.y > .3f && (controls.z > .1f || backing) && !Sprinting && player.HaveStamina(.1f);
     internal bool Grabbing => grabHeld;
     internal Vector3 SurfaceNormal => surfaceNormal;
     internal ComboSession Combo { get; } = new ComboSession();
@@ -93,10 +98,12 @@ internal sealed class BoardRider : MonoBehaviour
         var animator = GetComponentInChildren<Animator>();
         visual = animator ? animator.transform : null;
         skateAnimator = new SkateAnimator(animator);
+        balance = new SkateBalance(animator);
     }
 
     private void Update()
     {
+        balance?.Restore(); // Restore the prior additive pose before Animator evaluates.
         if (!IsLocal) { if (Riding) Dismount(true); return; }
         if (!loaded)
         {
@@ -162,11 +169,21 @@ internal sealed class BoardRider : MonoBehaviour
         contactWeight = 0f;
         probeContact = false;
         surfaceForward = Quaternion.Euler(0, heading, 0) * Vector3.forward;
+        // Start aligned to the standing surface. Interpolating from world-up
+        // here can lift the capsule off an incline just as the first push starts.
+        if (contactNormal.sqrMagnitude > .5f && contactNormal.y > .1f)
+        {
+            surfaceNormal = contactNormal;
+            surfaceForward = Quaternion.FromToRotation(Vector3.up,surfaceNormal) * surfaceForward;
+            body.rotation = Quaternion.LookRotation(surfaceForward,surfaceNormal);
+        }
         lastStepPosition = body.position;
-        hasSurfaceFrame = false;
+        hasSurfaceFrame = true;
         ClearInput();
         controls = Vector3.zero;
         sprintRequested = Sprinting = false;
+        airSteered = false;
+        rollingDirection = 1f;
         Combo.Bail();
         AutoRun(player) = false;
         SetCrouch.Invoke(player, new object[] { false });
@@ -197,6 +214,7 @@ internal sealed class BoardRider : MonoBehaviour
     {
         controls = Vector3.zero;
         jumpQueued = jumpHeld = grabHeld = grabUsedThisHold = sprintRequested = false;
+        backing = false;
         jumpHoldTime = randomTrickUntil = 0f;
     }
 
@@ -226,6 +244,7 @@ internal sealed class BoardRider : MonoBehaviour
             hasSurfaceFrame = true;
         }
         lastStepPosition = body.position;
+        if (controls.z >= -.1f) backing = false;
         Sprinting = Grounded && sprintRequested && controls.z > .1f && player.HaveStamina(6f * dt);
 
         Combo.Tick(dt);
@@ -245,18 +264,38 @@ internal sealed class BoardRider : MonoBehaviour
 
         Vector3 velocity = body.linearVelocity;
         float speed = Vector3.ProjectOnPlane(velocity, normal).magnitude;
-        float steering = Settings.TurnSpeed.Value * 1.3f / (1f + speed / 18f);
+        float steering = Grounded ? Settings.TurnSpeed.Value * 1.3f / (1f + speed / 24f) : Settings.AirTurnSpeed.Value;
         if (Grounded)
         {
-            surfaceForward = Quaternion.FromToRotation(surfaceNormal, normal) * surfaceForward;
-            surfaceNormal = normal;
-            surfaceForward = Vector3.ProjectOnPlane(surfaceForward, normal).normalized;
-            if (surfaceForward.sqrMagnitude < .1f) surfaceForward = Vector3.Cross(transform.right, normal).normalized;
+            // Filter small facet changes before they steer/rotate the capsule.
+            // A steep transition needs a fast response to retain real support.
+            float steepness = 1f - Mathf.InverseLerp(.25f,.65f,Mathf.Min(normal.y,surfaceNormal.y));
+            float response = Mathf.Lerp(Settings.SurfaceResponse.Value,120f,steepness);
+            Vector3 sampledNormal = SampleRidingNormal(normal,out bool continuousCurve);
+            float follow = continuousCurve ? 1f : Mathf.Lerp(1f-Mathf.Exp(-response*dt),1f,steepness);
+            Vector3 ridingNormal = Vector3.Slerp(surfaceNormal,continuousCurve ? normal : sampledNormal,follow).normalized;
+            Vector3 compassForward = Vector3.ProjectOnPlane(surfaceForward,Vector3.up).normalized;
+            surfaceForward = Quaternion.FromToRotation(surfaceNormal, ridingNormal) * surfaceForward;
+            surfaceNormal = ridingNormal;
+            // Changing cross-slopes must not accumulate an unsolicited yaw
+            // turn. Preserve the rider's compass heading on ordinary ground;
+            // smoothly hand back to surface-relative transport near walls.
+            float headingStability = Mathf.InverseLerp(.45f,.72f,surfaceNormal.y);
+            if (headingStability > 0f && compassForward.sqrMagnitude > .1f)
+            {
+                Vector3 stableForward = (compassForward-Vector3.up*(Vector3.Dot(compassForward,surfaceNormal)/surfaceNormal.y)).normalized;
+                surfaceForward = Vector3.Slerp(surfaceForward,stableForward,headingStability);
+            }
+            surfaceForward = Vector3.ProjectOnPlane(surfaceForward, surfaceNormal).normalized;
+            if (surfaceForward.sqrMagnitude < .1f) surfaceForward = Vector3.Cross(transform.right, surfaceNormal).normalized;
         }
-        surfaceForward = Quaternion.AngleAxis(controls.x * steering * dt * (Grounded ? 1f : .5f), surfaceNormal) * surfaceForward;
+        if (!Grounded && Mathf.Abs(controls.x) > .01f) airSteered = true;
+        surfaceForward = Quaternion.AngleAxis(controls.x * steering * dt, surfaceNormal) * surfaceForward;
         // In flight, retain launch direction through the apex and gently follow the trajectory.
         // No velocity is injected: this only poses the rider/collider for the return transition.
-        if (!Grounded && velocity.sqrMagnitude > 1f)
+        // Once the rider starts a deliberate air turn, retain that orientation
+        // through this flight. Trajectory following must not undo a half turn.
+        if (!Grounded && !airSteered && velocity.sqrMagnitude > 1f)
         {
             Vector3 trajectory = velocity.normalized;
             if (Vector3.Dot(trajectory, surfaceForward) > -.1f)
@@ -270,7 +309,8 @@ internal sealed class BoardRider : MonoBehaviour
         previousHeading = heading;
         body.MoveRotation(rotation);
         body.angularVelocity = Vector3.zero;
-        Vector3 forward = surfaceForward;
+        // Forces remain tangent to physical support while the frame smooths it.
+        Vector3 forward = Grounded ? Vector3.ProjectOnPlane(surfaceForward,normal).normalized : surfaceForward;
         lean = Mathf.MoveTowards(lean, -controls.x * Mathf.Clamp(speed / 12f, 0, 1f) * 14f, dt * 100f);
 
         if (Grounded)
@@ -280,24 +320,40 @@ internal sealed class BoardRider : MonoBehaviour
             // Removing its sideways component every tick loses terrain-earned
             // speed in corners; rotation preserves energy without adding any.
             Vector3 tangent = Vector3.ProjectOnPlane(velocity, normal);
+            float signedSpeed = Vector3.Dot(tangent,forward);
+            // A small slip while mounting/starting uphill should not make W
+            // switch to downhill fakie propulsion. Established rolls still do.
+            if (Mathf.Abs(signedSpeed)>2.5f) rollingDirection = Mathf.Sign(signedSpeed);
             Vector3 rolling = forward * (Vector3.Dot(tangent, forward) >= 0f ? tangent.magnitude : -tangent.magnitude);
             float gripAngle = Vector3.Angle(tangent, rolling) * Mathf.Deg2Rad * (1f - Mathf.Exp(-12f * dt));
             Vector3 carved = Vector3.RotateTowards(tangent, rolling, gripAngle, 0f);
-            float brake = controls.z < -.1f ? Settings.BrakeStrength.Value * -controls.z : .32f;
+            bool backwardHeld = controls.z < -.1f;
+            // Backward always brakes an existing roll first, in either stance.
+            // Latch reverse only once stopped so holding it can actually move
+            // away from an obstacle instead of alternating brake/push each tick.
+            if (backwardHeld && !backing && tangent.magnitude <= .15f) backing = true;
+            float brake = backwardHeld && !backing ? Settings.BrakeStrength.Value * -controls.z : .32f;
             carved = Vector3.MoveTowards(carved, Vector3.zero, brake * dt);
             float staminaRate = Sprinting ? 6f : 2f;
-            float topSpeed = Sprinting ? Settings.SprintTopSpeed.Value : Settings.PushTopSpeed.Value;
+            float topSpeed = backing ? Settings.ReverseTopSpeed.Value : Sprinting ? Settings.SprintTopSpeed.Value : Settings.PushTopSpeed.Value;
             // A wall ride is carried by momentum. A planted foot cannot push up
             // a vertical face; gravity is always free to slow and reverse the roll.
             float pushSupport = Mathf.Clamp01(normal.y);
-            if (pushSupport > .05f && controls.z > .1f && tangent.magnitude < topSpeed && player.HaveStamina(staminaRate * dt))
+            float pushInput = backing ? -controls.z : controls.z;
+            if (pushSupport > .05f && pushInput > .1f && tangent.magnitude < topSpeed && player.HaveStamina(staminaRate * dt))
             {
                 // Budget only the foot's contribution, using total surface speed.
                 // Steering/sliding must not reopen acceleration above the cap,
                 // and the last push step must not overshoot it. Gravity is separate.
-                float push = (Sprinting ? Settings.SprintAcceleration.Value : Settings.PushAcceleration.Value)
-                    * Mathf.Clamp01(controls.z) * pushSupport * dt;
-                carved += forward * Mathf.Min(push, Mathf.Max(0f, topSpeed - carved.magnitude));
+                Vector3 pushDirection = forward * (backing ? -1f : rollingDirection);
+                float grade = Mathf.Max(0,-Vector3.Dot(Physics.gravity,pushDirection));
+                float assistance = grade * Settings.UphillAssistance.Value * Mathf.InverseLerp(.35f,.7f,normal.y);
+                float acceleration = (backing ? Settings.ReverseAcceleration.Value : Sprinting ? Settings.SprintAcceleration.Value : Settings.PushAcceleration.Value) * pushSupport;
+                float push = (acceleration + assistance) * Mathf.Clamp01(pushInput) * dt;
+                // Forward means keep skating in the current rolling direction,
+                // including fakie after a rollback or backward landing. It must
+                // not act as a hidden brake whenever the nose points uphill.
+                carved += pushDirection * Mathf.Min(push, Mathf.Max(0f, topSpeed - carved.magnitude));
                 if (!Sprinting) player.UseStamina(staminaRate * dt);
             }
             if (Sprinting) player.UseStamina(6f * dt);
@@ -318,8 +374,9 @@ internal sealed class BoardRider : MonoBehaviour
             float approachSpeed = Speed;
             // The collider already redirects velocity up the ramp. Keep that full
             // momentum and add the ollie impulse; never replace its vertical part.
-            float uphill = Mathf.Max(0, Vector3.Dot(surfaceForward, Vector3.up));
-            Vector3 jumpDirection = Vector3.Slerp(surfaceNormal, surfaceForward, uphill * uphill).normalized;
+            Vector3 travelForward = Vector3.Dot(body.linearVelocity, surfaceForward) < -.15f ? -surfaceForward : surfaceForward;
+            float uphill = Mathf.Max(0, Vector3.Dot(travelForward, Vector3.up));
+            Vector3 jumpDirection = Vector3.Slerp(surfaceNormal, travelForward, uphill * uphill).normalized;
             Vector3 launch = body.linearVelocity + jumpDirection * Settings.JumpSpeed.Value;
             player.ForceJump(launch, effects: false); // No vanilla jump XP/stamina charge.
             ollieAvailable = false;
@@ -352,6 +409,7 @@ internal sealed class BoardRider : MonoBehaviour
             view.GetZDO().Set(SprintingKey, publishedSprinting);
         }
         view.GetZDO().Set(GrabKey, grabHeld);
+        view.GetZDO().Set(GroundedKey, Grounded);
         if (Time.time >= nextPoseSync)
         {
             view.GetZDO().Set(LeanKey, lean);
@@ -391,6 +449,7 @@ internal sealed class BoardRider : MonoBehaviour
 
     private void BeginAir()
     {
+        airSteered = false;
         takeoffTime = Time.time;
         takeoffSpeed = Speed;
         Combo.BeginAirborne();
@@ -446,6 +505,7 @@ internal sealed class BoardRider : MonoBehaviour
     {
         if (!Riding) return;
         Riding = false;
+        balance?.Restore();
         ClearInput();
         ollieAvailable = false;
         lastSupportedTime = float.NegativeInfinity;
@@ -502,8 +562,11 @@ internal sealed class BoardRider : MonoBehaviour
             // A stopped rigidbody still hit the wall at its incoming speed.
             Vector3 incoming = lastVelocity;
             if (collision.collider.attachedRigidbody) incoming -= collision.collider.attachedRigidbody.GetPointVelocity(contact.point);
-            if (!SupportingContact(contact, collision.collider, out _)
-                && Mathf.Abs(contact.normal.y) < .4f && Vector3.Dot(incoming, contact.normal) < -6f)
+            float closingSpeed = Mathf.Max(0,-Vector3.Dot(incoming,contact.normal));
+            bool lowObstacle = collision.collider.bounds.max.y-body.position.y<.4f;
+            if (!SupportingContact(contact, collision.collider, out _) && !lowObstacle
+                && Mathf.Abs(contact.normal.y) < .4f && closingSpeed > Settings.CollisionBailSpeed.Value
+                && closingSpeed > incoming.magnitude*.75f)
             { Dismount(true); break; }
         }
     }
@@ -565,6 +628,30 @@ internal sealed class BoardRider : MonoBehaviour
     private bool HasSupport(float dt) => Time.time >= ignoreGroundUntil && contactCollider
         && contactCollider.enabled && contactCollider.gameObject.activeInHierarchy
         && (probeContact ? contactTime == Time.fixedTime : Time.fixedTime - contactTime <= dt * 1.6f || body.IsSleeping());
+
+    private Vector3 SampleRidingNormal(Vector3 actual,out bool continuousCurve)
+    {
+        // A wheel-sized patch filters ordinary terrain triangles spatially.
+        // Do not bridge missing ground, average a wall into the floor, or tilt
+        // ahead into a vertical transition. Actual contacts still govern forces.
+        continuousCurve = actual.y<.65f || contactCollider.GetComponent<HalfpipeSurface>();
+        if(continuousCurve) return actual;
+        Vector3 forward=Vector3.ProjectOnPlane(surfaceForward,actual).normalized;
+        Vector3 right=Vector3.Cross(actual,forward).normalized;
+        Vector3 origin=body.position+actual*.45f;
+        if(!Physics.Raycast(origin+forward*.4f,-actual,out var front,.7f,SupportMask,QueryTriggerInteraction.Ignore)
+            || !Physics.Raycast(origin-forward*.4f,-actual,out var rear,.7f,SupportMask,QueryTriggerInteraction.Ignore)
+            || !Physics.Raycast(origin+right*.2f,-actual,out var side,.7f,SupportMask,QueryTriggerInteraction.Ignore)
+            || !Physics.Raycast(origin-right*.2f,-actual,out var other,.7f,SupportMask,QueryTriggerInteraction.Ignore)) return actual;
+        if(Vector3.Dot(front.normal,rear.normal)<.8f || Vector3.Dot(side.normal,other.normal)<.8f) return actual;
+        // A coherent concave transition needs prompt capsule alignment even
+        // before it becomes steep. Lag here can kick the capsule out at a seam.
+        continuousCurve = Vector3.Dot(front.normal,rear.normal)>.94f
+            && Vector3.Dot(front.normal-rear.normal,forward)<-.04f
+            && Vector3.Dot(front.normal-actual,actual-rear.normal)>0f;
+        Vector3 patch=Vector3.Cross(front.point-rear.point,side.point-other.point).normalized;
+        return Vector3.Dot(patch,actual)>.85f ? patch : actual;
+    }
 
     private bool BridgeSurfaceSeam()
     {
@@ -669,10 +756,12 @@ internal sealed class BoardRider : MonoBehaviour
             if (!posing) { originalVisualRotation = visual.localRotation; posing = true; }
             visual.localRotation = originalVisualRotation * Quaternion.Euler(grabHeld ? 12f : 0f, (skateAnimator?.Active == true ? 0 : 70) + (visualTrick == TrickId.ThreeSixty && phase < 1 ? yaw : 0), lean + (grabHeld ? 18f : 0f));
         }
+        balance?.Apply(transform.up,IsLocal ? Grounded : view.GetZDO().GetBool(GroundedKey,true),Settings.BalanceStrength.Value);
     }
 
     private void RestorePose()
     {
+        balance?.Restore();
         if (posing && visual) visual.localRotation = originalVisualRotation;
         posing = false;
     }
