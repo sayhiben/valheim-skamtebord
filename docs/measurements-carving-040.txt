@@ -1,0 +1,11 @@
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE CARVING PUSH sprint=False turning=False peak=9.0000 final=9.0000
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE CARVING PUSH sprint=False turning=True peak=9.0000 final=9.0000
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE CARVING PUSH sprint=True turning=False peak=14.0000 final=13.9936
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE CARVING PUSH sprint=True turning=True peak=14.0000 final=14.0000
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE CARVING FAST_CARVE initial=20.000 peak=20.000 final=19.354
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE CARVING FAST_CARVE initial=32.000 peak=32.000 final=31.354
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE CARVING HILL limit=25.0 peak=29.156 position=(0.00, 14.17, 60.45) riding=True
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE CARVING HILL limit=0.0 peak=42.167 position=(0.00, 13.85, 60.83) riding=True
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE CARVING FAST_AIR launch=(0.00, 4.40, 31.57) after=(0.00, -2.00, 31.57)
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE CARVING CORNER sign=1 sweep=110.02 bank=84.38 frames=73 gap=0.000 poseDot=1.0000 energy=144.500->144.391 speed=10.938 position=(-4.36, 3.37, 11.96)
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE CARVING CORNER sign=-1 sweep=110.02 bank=84.38 frames=73 gap=0.000 poseDot=1.0000 energy=144.500->144.391 speed=10.938 position=(4.36, 3.37, 11.96)

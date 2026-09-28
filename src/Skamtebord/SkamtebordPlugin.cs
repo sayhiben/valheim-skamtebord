@@ -15,7 +15,7 @@ namespace Skamtebord;
 public sealed class SkamtebordPlugin : BaseUnityPlugin
 {
     public const string Guid = "com.skamtebord.valheim";
-    public const string ModVersion = "0.3.1";
+    public const string ModVersion = "0.4.0";
     internal static SkamtebordPlugin Instance;
     internal SkateSettings Settings;
     internal SkateRadio Radio;
@@ -36,6 +36,7 @@ public sealed class SkamtebordPlugin : BaseUnityPlugin
             IncreaseStep = 1f
         });
         PrefabManager.OnVanillaPrefabsAvailable += BoardItem.Register;
+        PrefabManager.OnVanillaPrefabsAvailable += HalfpipePiece.Register;
         harmony = new Harmony(Guid);
         harmony.PatchAll();
         if (!Application.isBatchMode)
@@ -59,6 +60,7 @@ public sealed class SkamtebordPlugin : BaseUnityPlugin
     private void OnDestroy()
     {
         PrefabManager.OnVanillaPrefabsAvailable -= BoardItem.Register;
+        PrefabManager.OnVanillaPrefabsAvailable -= HalfpipePiece.Register;
         if (Radio)
         {
             Radio.enabled = false;

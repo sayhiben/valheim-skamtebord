@@ -4,9 +4,9 @@ Prepared on 2026-09-26 using the installed Steam release, **Valheim 1.0.16** (St
 
 ## Current development build — 2026-09-27
 
-The installed DLL in **Skamtebord Dev** is now **0.3.1**, including pushing/tuck animations, the relocated HUD, additive ramp ollies, revised trick controls, and automatic game-music muting during MP3 playback. SHA-256: `A05BDCB9A13E2ABAA7BD0E9CD73736F656B7A252B7CB4626FA2B49AAF43D66C8`. Previous DLLs are backed up under `.local/profile-backups/`. Configuration and radio files are preserved. The isolated validation results are in [testing.md](testing.md).
+The installed DLL in **Skamtebord Dev** is now the **0.4.0 development build**, including total-speed push limits, momentum-preserving carving and banking, shared skating support for terrain and vertical transitions, tap/hold beginner tricks, the wooden halfpipe, continuous pushing, and replicated multiplayer visuals. SHA-256: `3648A2BD2BC4EBBF70A7A618336682D0779DEF72E20C40155C46D46995DD5EB3`. Previous DLLs are backed up under `.local/profile-backups/`. Configuration and radio files are preserved. The isolated validation results are in [testing.md](testing.md).
 
-For an immediate ramp session, run `scripts/qa.ps1 -Ramps`: the player starts mounted, with all tricks unlocked, in the disposable three-lane course. The ordinary r2modman profile still uses normal progression and saves. The observations below describe the earlier 0.1.0 hands-on session.
+For an immediate ramp session, run `scripts/qa.ps1 -Ramps`: the player starts mounted, with all tricks unlocked, in the disposable three-lane course. The halfpipe is farther right; a nearby workbench, Hammer and 80 Wood let you try building another. The ordinary r2modman profile still uses normal progression and saves. The observations below describe the earlier 0.1.0 hands-on session.
 
 ## Launch again
 
@@ -16,7 +16,7 @@ For an immediate ramp session, run `scripts/qa.ps1 -Ramps`: the player starts mo
 
 This is a normal single-player session. The new character and world use the game's default cloud-save setting. The existing Default mod profile and existing character/world were not used for this test.
 
-The development profile contains only BepInExPack 5.4.2350, Jotunn 2.30.1, and Skamtebord 0.1.0. No runtime smoke-test or capture plugin is installed there. Physics, controls, radio, and progression use the generated default configuration.
+The development profile contains only BepInExPack 5.4.2350, Jotunn 2.30.1, and Skamtebord (originally 0.1.0 in this hands-on session; now updated as listed above). No runtime smoke-test or capture plugin is installed there.
 
 Profile directory:
 
@@ -60,6 +60,12 @@ spawn LeatherScraps 2
 Collect the materials, open the inventory with Tab, select **Skamtebord**, and craft it. It requires no station. Keep the board in your inventory, close the inventory, and press **B** to mount. **W** pushes, **A/D** steer, **S** brakes, and **Space** ollies. Press **B** again to dismount. Advanced tricks unlock through Skamtebord XP.
 
 ## Updating the development DLL
+
+2026-09-27 speed/banking follow-up: the current **0.4.0 development** DLL passed 38 carving, 35 surface, 61 halfpipe/input, 84 keyboard/rendering, 52 ramp, 30 physics, 21 core, and 73 two-process replication checks. Push limits remain 9/14 m/s through turns; terrain can exceed them, carving preserves momentum, and left/right rounded corners maintain contact through an 84° bank. `Physics/MaximumSpeed` remains a separate soft terrain governor, default 25 m/s, with `0` disabling it; airborne motion is unaffected. The prior build, profile metadata and configuration are backed up in `.local/profile-backups/pre-0.4.0-20260927-165508/`. Configuration was preserved byte-for-byte and MP3s were untouched.
+
+2026-09-27 earlier surface-support follow-up: that **0.4.0 development** DLL passed 35 surface, 61 halfpipe/input, 83 keyboard/rendering, 52 ramp, 30 physics, 21 core, and 73 two-process replication checks. It replaces the halfpipe-only ground exemption with shared support rules, bounded seam probes, natural crest departure, and pre-impact wall detection. The previous build and profile metadata/configuration are backed up in `.local/profile-backups/pre-0.4.0-20260927-163305/`. Configuration was preserved byte-for-byte; MP3s and normal saves are unchanged.
+
+2026-09-27 earlier update: **0.4.0 development** was installed after 60 halfpipe/input, 83 keyboard/rendering, 52 ramp, 30 physics, 21 core, and 73 two-process replication checks passed. That earlier DLL's SHA-256 was `5529DB913B99275541718C2B6BEA9FC97251F30B7F4F6296F950202301E68FBA`. The prior 0.3.1 DLL, metadata, configuration and mod-manager record are backed up in `.local/profile-backups/pre-0.4.0-20260927-160036/`. Configuration was preserved byte-for-byte, MP3 files were untouched, and the normal profile contains no QA harness. Multiplayer evidence uses the game's loopback TCP backend; Steam/PlayFab transport and dedicated servers remain untested.
 
 2026-09-27 update: **0.3.1** is installed after **54 live radio checks** and **21 core checks** passed. Its DLL hash matches the current build above. The previous DLL, metadata, configuration, radio-folder instructions, and mod-manager record are in `.local/profile-backups/pre-0.3.1-20260927-132622/`. MP3 playback now temporarily mutes only Valheim's music source and restores its prior mute state when playback ends. Sound effects and saved music-volume preferences are unchanged. The profile configuration was preserved byte-for-byte, and its music files were not moved or copied.
 

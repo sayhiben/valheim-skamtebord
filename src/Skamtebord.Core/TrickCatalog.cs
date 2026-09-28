@@ -36,10 +36,10 @@ namespace Skamtebord.Core
         private static readonly IReadOnlyList<TrickDefinition> Definitions = Array.AsReadOnly(new[]
         {
             new TrickDefinition(TrickId.Ollie, "Ollie", 100, 0, 0.12f),
-            new TrickDefinition(TrickId.Shuvit, "Shuvit", 160, 3, 0.24f),
+            new TrickDefinition(TrickId.Shuvit, "Shuvit", 160, 0, 0.18f),
             new TrickDefinition(TrickId.Kickflip, "Kickflip", 250, 8, 0.32f),
             new TrickDefinition(TrickId.Heelflip, "Heelflip", 300, 12, 0.36f),
-            new TrickDefinition(TrickId.Grab, "Grab", 180, 18, 0.28f),
+            new TrickDefinition(TrickId.Grab, "Grab", 180, 0, 0.20f),
             new TrickDefinition(TrickId.ThreeSixty, "360", 450, 25, 0.50f)
         });
 

@@ -1,0 +1,62 @@
+PASS save suppression active
+PASS save path isolated
+PASS board prefab exists in live ObjectDB
+PASS live crafting recipe registered
+PASS recipe is hand craftable with three ingredients
+PASS recipe costs match design
+PASS fresh test character selected
+PASS local player owns networked physics body
+PASS QA starts without cinematic, text intro, or Valkyrie
+PASS recipe offered to fresh character
+PASS test inventory receives registered board
+PASS board is ready in hotbar slot 1
+PASS QA preset unlocks every trick at Skamtebord 25
+PASS related Run and Jump skills are ready at level 25
+PASS character settles on real static collider
+PASS QA character is movable before controls begin
+PASS halfpipe prefab registered in live network scene
+PASS halfpipe costs 80 wood with recoverable building resources
+PASS halfpipe uses workbench and returns wood on removal
+PASS halfpipe is available in the ordinary Hammer build table
+PASS placed halfpipe has a persistent network object
+PASS halfpipe has real curved collision geometry
+PASS halfpipe direction 1: mount on flat bottom
+PASS halfpipe direction 1: current momentum carries rider off the curved lip
+PASS halfpipe direction 1: launch is within 12 degrees of vertical
+PASS halfpipe direction 1: rider and board follow the wall orientation
+PASS halfpipe direction 1: momentum supplies air above the lip
+PASS halfpipe direction 1: the curve does not trigger a wall bail
+PASS halfpipe direction -1: mount on flat bottom
+PASS halfpipe direction -1: current momentum carries rider off the curved lip
+PASS halfpipe direction -1: launch is within 12 degrees of vertical
+PASS halfpipe direction -1: rider and board follow the wall orientation
+PASS halfpipe direction -1: momentum supplies air above the lip
+PASS halfpipe direction -1: the curve does not trigger a wall bail
+PASS halfpipe direction 1: mount on flat bottom
+PASS halfpipe direction 1: current momentum carries rider off the curved lip
+PASS halfpipe direction 1: launch is within 12 degrees of vertical
+PASS halfpipe direction 1: rider and board follow the wall orientation
+PASS halfpipe direction 1: momentum supplies air above the lip
+PASS halfpipe direction 1: the curve does not trigger a wall bail
+PASS high timed ollie outside the pipe correctly bails on its hard flat landing
+PASS timed jump near the halfpipe lip adds height to the same approach momentum
+PASS dismount restores upright player rotation
+PASS easy controls use the ordinary PlayerController
+PASS beginner mounts through the normal B binding
+PASS stationary keyboard ollie cannot convert its jump impulse into approach speed or XP
+PASS holding forward keeps push intent at the speed cap
+PASS continuous forward completes multiple push cycles without cutting to coast
+PASS second jump tap chooses a beginner shuvit without a skill unlock
+PASS airborne trick tap does not inject a second jump impulse
+PASS beginner tap trick lands with its score intact
+PASS holding jump in the air begins a beginner grab
+PASS holding a grab does not repeatedly award tricks
+PASS releasing jump releases the grab
+PASS beginner held grab lands safely
+PASS beginner shuvit and grab bank Skamtebord XP after landing
+PASS normal steering turns tightly at low speed and progressively widens at high speed
+PASS normal dismount works after the easier trick controls
+PASS halfpipe takes ordinary building damage and keeps its visual
+PASS halfpipe supports ordinary repair
+PASS normal halfpipe removal destroys the network object and refunds 80 wood
+SUCCESS Halfpipe, easy trick controls and skating flow checks completed.

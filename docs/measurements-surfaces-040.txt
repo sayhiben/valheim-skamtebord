@@ -1,0 +1,7 @@
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE SURFACES VERTICAL split=False samples=7 vanilla=7 gap=0.000 exit=(0.00, 8.00, 0.00) peak=7.090 riding=True
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE SURFACES VERTICAL split=True samples=3 vanilla=3 gap=0.000 exit=(0.00, 7.47, -0.84) peak=6.152 riding=True
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE SURFACES SLOW peak=0.694 rollback=True
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE SURFACES CREST speed=3 departure=2.459 initial=(0.00, -5.55, 4.29) after=(0.00, -9.55, 4.29) elapsed=0.200
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE SURFACES CREST speed=14 departure=1.072 initial=(0.00, -1.20, 13.94) after=(0.00, -5.60, 13.94) elapsed=0.220
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE SURFACES DOWNHILL maxSpeed=15.336 unsupportedGap=0.000 distance=13.480
+[Info   :Skamtebord runtime smoke] SKAMTEBORD_SMOKE SURFACES WALL riding=False position=(0.00, -0.28, 2.47) velocity=(0.00, 0.00, 0.00)

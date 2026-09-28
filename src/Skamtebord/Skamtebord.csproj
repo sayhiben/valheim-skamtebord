@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Skamtebord</AssemblyName>
-    <Version>0.3.1</Version>
+    <Version>0.4.0</Version>
     <ValheimPath Condition="'$(ValheimPath)' == ''">D:\SteamLibrary\steamapps\common\Valheim</ValheimPath>
     <ManagedPath>$(ValheimPath)\valheim_Data\Managed</ManagedPath>
     <DependencyPath>$(MSBuildThisFileDirectory)..\..\.local\packages</DependencyPath>

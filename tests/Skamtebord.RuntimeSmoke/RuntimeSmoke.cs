@@ -58,6 +58,7 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
             Patch(typeof(Game), "Start", nameof(PrepareFreshProfile));
             Patch(typeof(Game), "SetActivityCampaignProgress", nameof(Skip));
             QaBootstrap.Install(harmony, message => Log("BOOTSTRAP", message));
+            NetworkSmoke.Install(harmony);
             var args = Environment.GetCommandLineArgs();
             int radioArgument = Array.IndexOf(args, "-skamtebord-radio-directory");
             if (radioArgument >= 0 && radioArgument + 1 < args.Length)
@@ -101,7 +102,7 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
         PlayerProfile profile = __instance.GetPlayerProfile();
         if (profile == null || profile.m_filename != testName || profile.m_fileSource != FileHelpers.FileSource.Local)
             throw new InvalidOperationException("Refusing to operate on a non-test character profile.");
-        profile.SetName("Skamtebord Smoke Test");
+        profile.SetName(NetworkSmoke.Active ? "Skamtebord QA " + NetworkSmoke.Role : "Skamtebord Smoke Test");
         profile.m_firstSpawn = false;
     }
 
@@ -143,6 +144,7 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
         ZNet.m_onlineBackend = OnlineBackendType.Steamworks;
         ZNet.SetServer(true, false, false, testName, "", world);
         ZNet.ResetServerHost();
+        if (NetworkSmoke.Active) NetworkSmoke.Configure(testName,world);
         Log("START", "Loading a new in-memory solo world, no listening/public server and no character file.");
         AccessTools.Method(typeof(FejdStartup), "LoadMainScene").Invoke(FejdStartup.instance, null);
 
@@ -178,7 +180,8 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
         player.SetGhostMode(true);
         AccessTools.Method(typeof(Player), "SetCrouch").Invoke(player, new object[] { false });
         player.m_autoRun = false;
-        bool keyboardTest = Environment.GetCommandLineArgs().Contains("-skamtebord-keyboard-test");
+        bool keyboardTest = Environment.GetCommandLineArgs().Contains("-skamtebord-keyboard-test")
+            || Environment.GetCommandLineArgs().Contains("-skamtebord-flow-test");
         var controller = player.GetComponent<PlayerController>();
         if (controller && !keyboardTest && !interactive) controller.enabled = false;
 
@@ -222,6 +225,9 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
         Check(player.CanMove(), "QA character is movable before controls begin");
         bool rampTest = Environment.GetCommandLineArgs().Contains("-skamtebord-ramps");
         bool radioTest = Environment.GetCommandLineArgs().Contains("-skamtebord-radio-test");
+        bool flowTest = Environment.GetCommandLineArgs().Contains("-skamtebord-flow-test");
+        bool surfaceTest = Environment.GetCommandLineArgs().Contains("-skamtebord-surface-test");
+        bool carvingTest = Environment.GetCommandLineArgs().Contains("-skamtebord-carving-test");
         if (rampTest && interactive) RampSmoke.CreatePlayCourse(origin);
         if (interactive)
         {
@@ -245,7 +251,7 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
         File.WriteAllText(Path.Combine(saveRoot, "qa-ready.json"), JsonUtility.ToJson(new ReadyRecord
         {
             processId = System.Diagnostics.Process.GetCurrentProcess().Id, readySeconds = Time.realtimeSinceStartup,
-            mode = interactive ? "play" : keyboardTest ? "keyboard" : rampTest ? "ramps" : radioTest ? "radio" : "physics", saveRoot = saveRoot,
+            mode = interactive ? "play" : NetworkSmoke.Active ? "network-"+NetworkSmoke.Role : carvingTest ? "carving" : surfaceTest ? "surfaces" : flowTest ? "flow" : keyboardTest ? "keyboard" : rampTest ? "ramps" : radioTest ? "radio" : "physics", saveRoot = saveRoot,
             initialPoints = initialPoints, level = Get<int>(Get<object>(rider, "Progression"), "Level"), fastWorld = QaBootstrap.FastWorld
         }, true));
         File.WriteAllText(Path.Combine(Paths.GameRootPath, "latest-qa-session.txt"), saveRoot);
@@ -256,12 +262,40 @@ public sealed class RuntimeSmoke : BaseUnityPlugin
             Log("READY", $"Interactive QA ready in {Time.realtimeSinceStartup:F2}s. Saves remain disabled.");
             yield break;
         }
+        if (NetworkSmoke.Active)
+        {
+            var network = NetworkSmoke.Run(player,rider,platform,saveRoot,Check,message=>Log("NETWORK",message));
+            while(network.MoveNext()) yield return network.Current;
+            Finish(true,"Two-process ZNet replication checks completed for " + NetworkSmoke.Role);
+            yield break;
+        }
         if (rampTest)
         {
             var ramps = RampSmoke.Run(player, rider, platform, saveRoot, Check, message => Log("RAMPS", message));
             while (ramps.MoveNext()) yield return ramps.Current;
             Check(SaveSystem.HasSessionFlag(SaveSystemSessionFlags.DontSaveAnything), "ramp test retains save isolation");
             Finish(true, "Real Unity ramp momentum and timed-jump checks completed; telemetry in " + saveRoot);
+            yield break;
+        }
+        if (flowTest)
+        {
+            var flow = FlowSmoke.Run(player, rider, platform, saveRoot, Check, message => Log("FLOW",message));
+            while (flow.MoveNext()) yield return flow.Current;
+            Finish(true,"Halfpipe, easy trick controls and skating flow checks completed.");
+            yield break;
+        }
+        if (carvingTest)
+        {
+            var carving = CarvingSmoke.Run(player,rider,platform,saveRoot,Check,message=>Log("CARVING",message));
+            while(carving.MoveNext()) yield return carving.Current;
+            Finish(true,"Push limits, terrain momentum and banked corner checks completed.");
+            yield break;
+        }
+        if (surfaceTest)
+        {
+            var surfaces = SurfaceSmoke.Run(player,rider,platform,saveRoot,Check,message=>Log("SURFACES",message));
+            while(surfaces.MoveNext()) yield return surfaces.Current;
+            Finish(true,"General skating support, surface flow and natural takeoff checks completed.");
             yield break;
         }
         if (radioTest)

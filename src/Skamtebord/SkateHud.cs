@@ -49,7 +49,7 @@ internal sealed class SkateHud : MonoBehaviour
                 : Time.time < rider.StatusUntil ? rider.Status : "Land, then roll for 2 seconds to bank.";
             GUI.Label(new Rect(14, 110, 322, 36), status, small);
             GUI.Label(new Rect(14, 148, 322, 22), $"{ZInput.instance.GetBoundKeyString("Run")}: sprint  ·  Jump: ollie  ·  {s.Mount.Value}: off", small);
-            GUI.Label(new Rect(14, 173, 322, 22), $"{s.Shuvit.Value} shuvit · {s.Kickflip.Value} flip · {s.Heelflip.Value} heel · {s.Grab.Value} grab · {s.Spin.Value} 360", small);
+            GUI.Label(new Rect(14, 173, 322, 22), "Air: tap Jump for a trick · hold Jump to grab", small);
             string radio = plugin.Radio && plugin.Radio.IsEnabled
                 ? (string.IsNullOrEmpty(plugin.Radio.NowPlaying) ? plugin.Radio.Status : plugin.Radio.NowPlaying) : "Radio off";
             GUI.Label(new Rect(14, 198, 242, 22), new GUIContent("♫ " + radio, radio), radioStyle);
